@@ -1,7 +1,4 @@
-/* crux's mark: "Ring that opens" (Rayane's pick, 6 Nov 2026; board: site-variants/keel-mark/board-v2.html).
-   At rest the whole day: earlier blocks in taupe, the running block in orange, the white now-edge.
-   Hover plays the start: the plate turns, then the camera dollies into the folded crook, the count seated in it.
-   One drawing for the crux page (wordmark, top bar, favicon) and the home list. */
+
 (function(G){
 'use strict';
 var KC={dark:{ground:'#14110D',track:'#2A2219',spent:'#55483A',ink3:'#776C5E',ink2:'#ABA091',ink:'#F4EEE4',hi:'#E3763F',dim:'#7B3A21',edge:'#FFFFFF'},

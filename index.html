@@ -299,8 +299,9 @@ kbd{font:600 12px/1 var(--cond);border:1px solid currentColor;border-color:color
   .apps .go{display:none}
   .apps ol{margin:0;max-width:none}
   .camera{position:relative;inset:auto;overflow:visible}
-  .mat{position:fixed;left:0;top:0;width:100%;height:100%;-webkit-mask-image:none;mask-image:none}
-  .bench{position:relative;width:auto;height:auto;transform:none!important;display:flex;flex-direction:column;align-items:center;gap:0;padding:0 0 56px}
+  /* the rows sit on the plain ground; the mat's grid only showed as a stray band under them */
+  .mat{display:none}
+  .bench{position:relative;width:auto;height:auto;transform:none!important;display:flex;flex-direction:column;align-items:center;gap:0;padding:0 0 40px}
   .obj{position:relative;left:auto;top:auto;width:min(var(--w),calc(100vw - 72px));height:auto;aspect-ratio:var(--ar)}
   .obj[data-app="crux"]{width:min(320px,calc(100vw - 48px))}
   .obj .mlabel i{opacity:1;transform:translate(-50%,0)}

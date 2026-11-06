@@ -6,15 +6,15 @@ window.COPY = {
   /* ---------- the home page ---------- */
   site: {
     name: "Rayane El Metni",
-    /* PLACEHOLDER tagline: his seed line, kept until he picks the final one. */
-    tagline: "Problem solver in Brussels. Mostly my own problems, so far.", // placeholder = option 1 until Rayane picks (HANDOFF.md)
+    
+    tagline: "Problem solver in Brussels. Mostly my own problems, so far.",
     taglineIsPlaceholder: true,
-    /* PLACEHOLDER slot: one short line under the tagline (role, school). Hidden while empty; shows as soon as it holds text. */
+    
     role: "",
-    /* PLACEHOLDER contact: each link renders when it holds a value (an empty string hides it). Swap in the real ones. */
+    
     contact: {
-      email: "",                          /* PLACEHOLDER address */
-      linkedin: ""  /* PLACEHOLDER profile URL */
+      email: "",                          
+      linkedin: ""  
     },
     linkedin: "LinkedIn",
     title: "Rayane El Metni",
