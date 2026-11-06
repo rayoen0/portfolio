@@ -1,0 +1,819 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>case coach</title>
+<meta name="description" content="case coach: a spoken case-interview coach. One interviewer, a desk, paper.">
+<link rel="icon" href="case-coach-favicon.svg" type="image/svg+xml">
+<script src="copy.js"></script>
+<script>(function(){var r=document.documentElement;r.classList.add('js');try{if(!matchMedia('(prefers-reduced-motion: reduce)').matches)r.classList.add('entering');}catch(e){}})();</script>
+<style>
+/* case coach's own tokens (case-coach web/style.css). Dark only, on purpose: the room at night, the only light object is paper,
+   brass means speaking and the one primary action. System sans, 400 and 600, tabular numerals. */
+:root{
+  color-scheme:dark;
+  --bg:#0c0e12;--panel:#13161c;--panel2:#181c23;--line:#232833;--line2:#2c3240;
+  --ink:#e9ecef;--mute:#8f98a3;--dim:#5f6873;--dim-ink:#7a8490;
+  --accent:#d9b15c;--accent-hi:#e3be6c;--accent-ink:#1a1405;
+  --good:#8fd3a3;--warn:#e9a86b;--bad:#e07a7a;
+  --paper:#f4efe4;--paperink:#1d2026;--chart:#4a6fa5;--rule:#d9d2c1;--under:#e4ddcb;--edge:#cfc7b4;--pmute:#6b6558;--pmute2:#5f594c;
+  --p-good:#3d7456;
+  --x-blue:#3f6196;--x-grey:#8a8f99;
+  --sans:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,monospace;
+  --out:cubic-bezier(.2,.7,.2,1);
+  --expo:cubic-bezier(.16,1,.3,1);
+  --gut:32px;
+}
+@media (max-width:759px){:root{--gut:16px}}
+*{box-sizing:border-box}
+html{background:var(--bg);-webkit-text-size-adjust:100%}
+@media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 15px/1.45 var(--sans);-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums;overflow-x:hidden}
+::selection{background:rgba(217,177,92,.3);color:var(--ink)}
+:focus{outline:none}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+a{color:inherit}
+h1,h2,p,ol{margin:0;padding:0}
+b,strong{font-weight:600}
+[hidden]{display:none!important}
+.wrap{max-width:calc(1224px + 2 * var(--gut));margin:0 auto;padding:0 var(--gut)}
+
+/* controls: one rule, heights 32 / 40 / 48, radius 10; brass only for the one primary */
+.btn{appearance:none;display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:40px;padding:0 16px;border:1px solid var(--line2);border-radius:10px;background:transparent;color:var(--ink);font:400 15px/1 var(--sans);text-decoration:none;cursor:pointer;white-space:nowrap;
+  transition:border-color .16s,background-color .16s,color .16s,transform .12s ease-out}
+@media (hover:hover) and (pointer:fine){.btn:hover{border-color:var(--mute)}.btn.primary:hover{background:var(--accent-hi);border-color:var(--accent-hi)}}
+.btn:active{transform:scale(.97)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
+.btn.small{min-height:32px;padding:0 12px;font-size:13px}
+.btn.lg{min-height:48px;padding:0 24px;font-size:18px}
+.btn.glyph{width:36px;min-height:36px;padding:0;color:var(--mute)}
+.btn.onpaper{border-color:#b9b19c;color:var(--paperink)}
+.btn svg{flex:none}
+kbd{font:400 12px/1.5 var(--mono);color:var(--ink);background:var(--panel2);border:1px solid var(--line2);border-bottom-width:2px;border-radius:4px;padding:0 6px;min-width:22px;text-align:center;display:inline-block}
+
+/* ---- top bar: back to the bench, the four parts ---- */
+.top{position:absolute;left:0;right:0;top:0;z-index:5}
+.top .wrap{display:flex;align-items:center;gap:16px;min-height:72px}
+.top nav{margin-left:auto;display:flex;gap:4px}
+.top nav a{color:var(--mute);font-size:13px;min-height:32px;display:inline-flex;align-items:center;padding:0 12px;border-radius:10px;text-decoration:none;transition:color .12s,background-color .12s}
+@media (hover:hover) and (pointer:fine){.top nav a:hover{color:var(--ink);background:var(--panel2)}}
+@media (max-width:759px){.top nav{display:none}}
+
+/* ---- presence: the ring and her face (case-coach web/style.css 216-255, components.js 75-90) ---- */
+.who{flex:none}
+.ringbox{position:relative;display:block;aspect-ratio:1;width:100%}
+.ring-core,.ring-halo{position:absolute;inset:0;border-radius:50%}
+.ring-core{border:2px solid var(--dim);transform:scale(calc(.92 + var(--lvl,0) * .14));transition:border-color .16s}
+.ring-halo{border:1px solid var(--dim);opacity:calc(var(--lvl,0) * .9);transform:scale(calc(1.04 + var(--lvl,0) * .22));transition:border-color .16s}
+.pres[data-state=speaking] .ring-core,.pres[data-state=speaking] .ring-halo{border-color:var(--accent)}
+.pres[data-state=speaking] .ring-core{animation:breathe 1.2s ease-out infinite}
+.pres[data-state=listening] .ring-core,.pres[data-state=listening] .ring-halo{border-color:var(--good)}
+.pres[data-state=waiting] .ring-core{border-color:var(--warn)}
+.pres[data-state=thinking] .ring-core{animation:breathe 2.4s ease-in-out infinite}
+@keyframes breathe{0%{opacity:.6}50%{opacity:1}100%{opacity:.6}}
+.face{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.face *{transform-box:fill-box}
+.f-bg{fill:var(--panel)}
+.f-body{animation:f-breath 5.7s ease-in-out infinite}
+.f-head{transform-origin:50% 92%;animation:f-sway 7.4s ease-in-out infinite;transition:rotate .4s ease-out}
+.f-brows{transition:translate .3s ease-out}
+.f-iris{transition:translate .32s var(--out)}
+.f-lid{transform-origin:50% 0;transform:scaleY(.16);animation:f-blink 4.6s infinite}
+.f-mouth{transform-origin:50% 50%;transition:transform 70ms linear}
+.pres[data-state=speaking] .f-mouth{transform:scale(calc(1 - var(--lvl,0) * .19),calc(1 + var(--lvl,0) * 5.4))}
+.pres[data-state=listening] .f-head,.pres[data-state=waiting] .f-head{animation:f-nod 3.4s ease-in-out infinite}
+.pres[data-state=listening] .f-brows{translate:0 -1.8px}
+.pres[data-state=thinking] .f-head{rotate:-3deg}
+.pres[data-state=thinking] .f-brows{translate:0 1px}
+.pres[data-state=thinking] .f-iris{translate:-1.8px -1.3px}
+.pres .face{--gx:2.6px;--gy:.9px}
+.pres.glance .f-look{animation:f-glance 1.9s cubic-bezier(.4,0,.2,1)}
+.ringbox.sm .f-head,.ringbox.sm .f-body{animation:none}
+@keyframes f-breath{50%{transform:translateY(1.2px)}}
+@keyframes f-sway{0%,100%{transform:rotate(-1.4deg)}50%{transform:rotate(1.4deg)}}
+@keyframes f-nod{0%,100%{transform:rotate(-.6deg) translateY(0)}50%{transform:rotate(.8deg) translateY(.8px)}}
+@keyframes f-blink{0%,93.5%,99%,100%{transform:scaleY(.16)}96%{transform:scaleY(1)}}
+@keyframes f-glance{0%,100%{transform:none}16%,68%{transform:translate(var(--gx),var(--gy))}}
+/* a scene off screen or paused holds still */
+.offscreen .ring-core,.offscreen .f-body,.offscreen .f-head,.offscreen .f-lid,.offscreen .slip-wait i,
+.still .ring-core,.still .f-body,.still .f-head,.still .f-lid{animation-play-state:paused}
+@keyframes fadein{from{opacity:0}to{opacity:1}}
+@keyframes rise{from{opacity:0;transform:translateY(10px);filter:blur(4px)}to{opacity:1;transform:none;filter:none}}
+@keyframes thr-ring{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:none}}
+@keyframes pen{from{stroke-dashoffset:15}to{stroke-dashoffset:0}}
+@keyframes pulse{50%{opacity:.5}}
+@keyframes drain{from{transform:scaleX(1)}to{transform:scaleX(0)}}
+@keyframes rcpop{0%{transform:scale(.6)}60%{transform:scale(1.5)}100%{transform:scale(1.18)}}
+.swap{animation:fadein .16s ease-out}
+.pp{position:absolute;right:16px;bottom:16px;z-index:3}
+
+/* ---- HERO: the room ---- */
+.hero{position:relative;min-height:100vh;min-height:100svh;display:flex;align-items:center;padding:88px 0 32px}
+.hero>.wrap{width:100%;display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:48px;align-items:center}
+.lockup{display:flex;flex-direction:column;gap:16px}
+h1{display:flex;align-items:center;gap:.22em;font:600 clamp(44px,5.6vw,96px)/1 var(--sans);letter-spacing:-.04em;white-space:nowrap}
+h1 .mk{width:.56em;height:.56em;flex:none}
+@media (max-width:359px){h1{white-space:normal;text-wrap:balance}}
+.tagline{font-size:clamp(22px,2vw,30px);line-height:1.25;letter-spacing:-.4px;max-width:18ch;text-wrap:balance}
+/* the fact, one line per thing you need: her voice, your headphones, paper and pen */
+.facts{list-style:none;margin:12px 0 0;padding:16px 0 0;border-top:1px solid var(--line);display:grid;gap:10px}
+.facts li{display:flex;align-items:center;gap:12px;font-size:15px;color:var(--mute)}
+.facts svg{width:20px;height:20px;flex:none;color:var(--accent)}
+.room{position:relative;display:flex;flex-direction:column;align-items:center;text-align:center;padding:40px 0 64px}
+.room .who{width:clamp(200px,36vh,330px)}
+.nm{margin-top:clamp(20px,4vh,36px);font-weight:600;color:var(--mute);font-size:15px}
+.line{margin-top:20px;max-width:720px;min-height:2.6em;letter-spacing:-.3px;line-height:1.3;text-wrap:balance}
+.line[data-size=s]{font-size:36px}.line[data-size=m]{font-size:28px}.line[data-size=l]{font-size:22px}.line[data-size=xl]{font-size:18px}
+.clk{position:absolute;top:0;right:0;color:var(--dim-ink);font-size:15px}
+.ctls{margin-top:24px;display:flex;gap:8px;flex-wrap:wrap;justify-content:center;transition:opacity .24s ease-out}
+@media (hover:hover) and (pointer:fine){.room.rest .ctls:not(:focus-within){opacity:0}}
+@media (pointer:coarse){.ctl kbd{display:none}} /* no keyboard on a phone: the keys stay on the desktop */
+.ctl{appearance:none;display:inline-flex;align-items:center;gap:8px;min-height:32px;padding:0 12px;font:400 13px/1 var(--sans);color:var(--mute);background:transparent;border:1px solid var(--line);border-radius:4px;cursor:pointer;transition:color .12s,border-color .12s}
+@media (hover:hover) and (pointer:fine){.ctl:hover{color:var(--ink);border-color:var(--line2)}}
+.room .pp{right:0;bottom:0}
+/* one orchestrated entrance: the threshold. Her ring arrives (640 ms, the product's own door), her name, her first words, then the page */
+@media (prefers-reduced-motion:no-preference){
+  .entering .room .who{animation:thr-ring .64s var(--out) both}
+  .entering .room .nm{animation:fadein .24s ease-out .38s both}
+  .entering .room .line{animation:fadein .2s ease-out .5s both}
+  .entering .lockup h1{animation:rise .42s var(--expo) .62s both}
+  .entering .lockup .tagline{animation:rise .42s var(--expo) .72s both}
+  .entering .lockup .facts{animation:rise .42s var(--expo) .8s both}
+  .entering .top,.entering .room .clk,.entering .room .pp{animation:fadein .3s ease-out .86s both}
+  .entering .room .ctls{animation:fadein .3s ease-out .95s both}
+}
+@media (max-width:999px){
+  .hero{min-height:0;padding-top:72px;align-items:flex-start}
+  .hero>.wrap{grid-template-columns:minmax(0,1fr);gap:24px}
+  .room{padding:8px 0 56px}
+  .room .who{width:min(50vw,220px)}
+  .lockup{gap:10px}
+  .facts{display:flex;flex-wrap:wrap;gap:6px 16px;margin:0;padding:0;border:0}
+  .facts li{font-size:13px;gap:6px}
+  .facts svg{width:16px;height:16px}
+}
+@media (max-width:759px){.room .who{width:min(46vw,190px)}.nm{margin-top:14px}.line{margin-top:12px}.ctls{margin-top:16px}}
+@media (orientation:landscape) and (max-height:520px) and (min-width:560px){
+  .hero{min-height:100svh;padding:60px 0 12px;align-items:center}
+  .hero>.wrap{grid-template-columns:minmax(0,4fr) minmax(0,6fr);gap:24px}
+  h1{font-size:40px}
+  .tagline{font-size:18px}
+  .room{padding:0 0 0}
+  .room .who{width:min(34vh,140px)}
+  .nm{margin-top:8px;font-size:13px}
+  .line{margin-top:6px;min-height:0}
+  .line[data-size]{font-size:18px}
+  .ctls{margin-top:10px}
+  .clk{top:-4px}
+  .room .pp{position:absolute;right:0;bottom:auto;top:40px}
+  .nm{margin-top:14px}
+  .facts{display:flex;flex-wrap:wrap;gap:6px 14px;margin:2px 0 0;padding:0;border:0}
+  .facts li{font-size:13px;gap:6px}
+  .facts svg{width:16px;height:16px}
+}
+@media (max-width:759px){
+  .line[data-size=s]{font-size:28px}.line[data-size=m]{font-size:22px}.line[data-size=l]{font-size:18px}.line[data-size=xl]{font-size:15px}
+  .tagline{font-size:18px}
+}
+
+/* ---- sections: each one a slice of the room ---- */
+.sec{padding-top:128px;scroll-margin-top:16px}
+.sec-h{display:flex;flex-direction:column;gap:8px;margin-bottom:32px}
+.sec-h h2{font:600 28px/1.15 var(--sans);letter-spacing:-.3px;text-wrap:balance}
+.lede{font-size:18px;line-height:1.4;color:var(--mute);max-width:52ch;text-wrap:pretty}
+.frame{position:relative;border:1px solid var(--line);border-radius:14px;background:var(--bg)}
+@media (max-width:759px){.sec{padding-top:88px}.sec-h{margin-bottom:24px}.lede{font-size:15px}}
+
+/* paper: one cream sheet with a second sheet peeking 6 px behind, no shadow */
+.sheet-stack{position:relative;margin:0 6px 6px 0}
+.sheet-under{position:absolute;inset:6px -6px -6px 6px;background:var(--under);border:1px solid var(--edge);border-radius:4px}
+.sheet{position:relative;z-index:1;background:var(--paper);color:var(--paperink);border:1px solid var(--edge);border-radius:4px;padding:24px 32px}
+.lab{display:block;font-size:13px;font-weight:600;color:var(--pmute)}
+
+/* ---- exhibit ---- */
+.xroom{display:grid;grid-template-columns:240px minmax(0,1fr);gap:32px;padding:32px 32px 64px}
+.rail{display:flex;flex-direction:column;align-items:flex-start;gap:12px}
+.rail .who{width:clamp(150px,22vh,200px)}
+.rail .nm{margin:0}
+.rl{font-size:15px;line-height:1.45;min-height:2.9em;text-wrap:pretty}
+.tray{display:flex;align-items:center;gap:8px;margin-top:8px}
+.tray-lbl{font-size:12px;color:var(--dim-ink);margin-right:4px}
+.tab{appearance:none;min-width:32px;min-height:32px;font:600 13px/1 var(--sans);background:var(--paper);color:var(--paperink);border:1px solid transparent;border-radius:4px;opacity:.55;cursor:pointer;transition:opacity .16s,border-color .16s}
+.tab[aria-pressed=true]{opacity:1;border-color:var(--accent)}
+.tab[hidden]{display:none}
+.desk{min-width:0;align-self:start}
+.paper{opacity:0;transform:translateX(24px);transition:opacity .2s ease-in,transform .2s ease-in}
+.paper.in{opacity:1;transform:none;transition:opacity .28s ease-out .1s,transform .28s ease-out .1s}
+.xh{display:flex;justify-content:space-between;align-items:baseline;gap:8px 16px;flex-wrap:wrap;padding-bottom:12px;margin-bottom:12px;border-bottom:1px solid var(--rule)}
+.xh b{font-size:15px}
+.legend{display:flex;gap:16px;font-size:13px;color:var(--pmute)}
+.legend i{display:inline-block;width:10px;height:10px;margin-right:6px;vertical-align:-1px}
+.xchart{display:block;width:100%;height:auto}
+.xchart.narrow{display:none}
+.xtable{width:100%;border-collapse:collapse;font-size:18px}
+.xtable th{text-align:left;font-size:13px;font-weight:600;color:var(--pmute);padding:4px 0 8px;border-bottom:2px solid var(--paperink)}
+.xtable td{padding:14px 0;border-bottom:1px solid var(--rule)}
+.xtable th:last-child,.xtable td:last-child{text-align:right}
+.xnote{border-top:1px solid var(--rule);padding-top:8px;margin-top:8px;font-size:13px;color:var(--pmute)}
+@media (max-width:759px){
+  .xroom{grid-template-columns:minmax(0,1fr);gap:16px;padding:16px 16px 64px}
+  .rail{display:grid;grid-template-columns:72px minmax(0,1fr);align-items:center;gap:8px 12px}
+  .rail .who{width:72px}
+  .rail .nm{display:none}
+  .rl{min-height:0}
+  .tray{grid-column:1/-1;margin:0}
+  .sheet{padding:16px}
+  .xchart.wide{display:none}.xchart.narrow{display:block}
+  .xtable{font-size:15px}
+}
+
+/* ---- maths: the spoken drill room ---- */
+.droom{min-height:500px;padding:40px 16px 72px;overflow:hidden}
+@media (min-width:1000px){
+  .sec.side>.wrap{display:grid;grid-template-columns:minmax(0,4fr) minmax(0,7fr);gap:48px;align-items:center}
+  .sec.side .sec-h{margin-bottom:0}
+  .droom{min-height:460px;padding:48px 24px 64px}
+}
+.drill{display:flex;flex-direction:column;align-items:center;transition:opacity .24s ease-out .2s}
+.drill.out{opacity:0;transition-delay:0s}
+.drill .who{width:150px}
+.drill .nm{font-size:15px;margin-top:20px}
+.sum{margin-top:28px;min-height:1.25em;font-size:28px;letter-spacing:-.3px;line-height:1.25;text-align:center;text-wrap:balance}
+.ans{min-height:34px;margin-top:8px;font-size:22px;font-weight:600;color:var(--bad);text-align:center}
+.chain{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:10px 14px;min-height:28px;margin-top:20px;max-width:100%;padding:0 8px}
+.rc{position:relative;width:14px;height:14px;border-radius:50%;border:2px solid var(--dim);background:transparent;flex:none;transition:background-color .16s,border-color .16s,transform .16s}
+.rc.hit{background:var(--good);border-color:var(--good)}
+.rc.miss{background:var(--bad);border-color:var(--bad)}
+.rc.skip{border-style:dashed}
+.rc.now{border-color:var(--ink);outline:1px solid var(--line2);outline-offset:3px}
+.rc.hit+.rc.hit::before{content:"";position:absolute;right:100%;top:50%;width:14px;height:2px;margin-top:-1px;background:var(--good);opacity:.55}
+.rc.hot{transform:scale(1.18)}
+.rc.hot+.rc.hot::before{height:3px;margin-top:-1.5px;opacity:1}
+.rc.pop{animation:rcpop .24s ease-out}
+.rc-n{font-size:22px;font-weight:600;color:var(--good);margin-left:8px;animation:fadein .16s ease-out}
+.dend{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;opacity:0;visibility:hidden;transition:opacity .24s ease-out,visibility 0s .24s}
+.dend.on{opacity:1;visibility:visible;transition:opacity .24s ease-out}
+.score{position:relative;width:168px;height:168px;display:grid;place-items:center}
+.score svg{position:absolute;inset:0}
+.score .bg{stroke:var(--line2)}
+.score .arc{stroke:var(--good);transition:stroke-dashoffset .6s ease-out}
+.score .fig{display:flex;align-items:baseline;gap:2px}
+.score .fig b{font-size:44px;letter-spacing:-.04em}
+.score .fig span{color:var(--mute);font-size:13px}
+.dend .rc{width:16px;height:16px}
+.drainbar{width:160px;height:2px;border-radius:4px;background:var(--line);overflow:hidden}
+.drainbar i{display:block;height:100%;background:var(--dim-ink);transform-origin:left}
+.dend.on .drainbar i{animation:drain 6s linear forwards}
+@media (max-width:759px){.drill .who{width:120px}.sum{font-size:22px}}
+
+/* ---- debrief: the band and the sheet ---- */
+.dbroom{padding:24px 32px 40px;display:flex;flex-direction:column;gap:24px}
+.band{display:flex;align-items:center;gap:16px;min-height:72px;flex-wrap:wrap}
+.band .who{width:56px}
+.band-text{flex:1;min-width:200px;display:flex;flex-direction:column;gap:2px}
+.band-text b{font-size:15px;color:var(--mute);transition:color .16s}
+.band[data-state=speaking] .band-text b{color:var(--accent)}
+.band[data-state=listening] .band-text b{color:var(--good)}
+.band-line{font-size:18px;line-height:1.3}
+.band-sub{font-size:13px;color:var(--dim-ink);min-height:1.45em}
+.band-act{flex:none;display:flex;gap:8px}
+.slipwrap{max-width:800px}
+@media (min-width:1000px){
+  .dbroom{display:grid;grid-template-columns:240px minmax(0,1fr);gap:32px;align-items:start;padding:32px 32px 40px}
+  .band{flex-direction:column;align-items:flex-start;gap:12px;min-height:0}
+  .band .who{width:96px}
+  .band-text{min-width:0}
+  .band-line{font-size:18px}
+  .slipwrap{max-width:none}
+  .slip-body.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px 40px;align-items:start}
+  .slip-body.two .slip-b{border-left:1px solid var(--rule);padding-left:40px}
+  .slip-body.two .slip-b .slip-part{border-top:0;padding-top:0}
+}
+.slip-a,.slip-b{display:flex;flex-direction:column;gap:16px}
+@media (max-width:999px){.slip-a,.slip-b{display:contents}.slip-next,.slip-body .slip-act{order:2}}
+.slip-body{display:flex;flex-direction:column;gap:16px;min-height:120px}
+.outcome{font-size:28px;font-weight:600;letter-spacing:-.3px;line-height:1.1;color:var(--p-good)}
+.slip-words{font-size:18px;line-height:1.45;max-width:60ch}
+.slip-gap{font-size:13px;line-height:1.45;color:var(--pmute2)}
+.slip-part{border-top:1px solid var(--rule);padding-top:16px;display:flex;flex-direction:column;gap:8px}
+.said{font-size:18px;line-height:1.4;color:#2a2e35}
+.why{font-size:15px;line-height:1.45;color:#3a3f47}
+.slip-hear{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.tstamp{font:400 13px/1 var(--mono);color:var(--pmute)}
+.play{display:inline-block;border-style:solid;border-width:5px 0 5px 8px;border-color:transparent transparent transparent currentColor}
+.slip-act{display:flex;gap:12px;flex-wrap:wrap;margin-top:4px}
+.slip-wait{display:flex;flex-direction:column;gap:8px;padding:8px 0}
+.slip-wait i{height:12px;border-radius:4px;background:var(--under);animation:pulse 1.2s ease-in-out infinite}
+.slip-wait i:nth-child(1){width:92%}.slip-wait i:nth-child(2){width:78%}.slip-wait i:nth-child(3){width:55%}
+.againq{font-size:15px;color:var(--pmute)}
+.ba{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}
+.ba>div{display:flex;flex-direction:column;gap:8px}
+.ba .before .said{color:var(--pmute)}
+.fixed{font-size:22px;font-weight:600;color:var(--p-good)}
+@media (max-width:759px){.dbroom{padding:16px 16px 32px}.ba{grid-template-columns:minmax(0,1fr)}.slip-words,.said{font-size:15px}}
+
+/* ---- tonight: the front door, ticked in pen while you scroll ---- */
+.door{padding:40px 40px 48px;display:flex;flex-direction:column;gap:32px}
+.door-who{display:flex;align-items:center;gap:12px}
+.door-who .who{width:40px}
+.door-name{color:var(--mute);font-size:13px}
+.door-when{margin-left:auto;font-size:13px;color:var(--mute)}
+@media (min-width:1000px){
+  .door{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);grid-template-areas:"who sheet" "line sheet" "act sheet";gap:24px 48px;align-content:start;align-items:start}
+  .door-who{grid-area:who}.door-line{grid-area:line;font-size:36px;min-height:3.45em}.door .sheet-stack{grid-area:sheet;max-width:none}.door-act{grid-area:act}
+}
+.door-line{font:600 44px/1.15 var(--sans);letter-spacing:-.3px;max-width:20em;min-height:2.3em;text-wrap:balance}
+.door .sheet-stack{max-width:760px}
+.sheet-h{display:flex;gap:8px;align-items:baseline;margin-bottom:8px}
+.sheet-h span{font-size:13px;color:var(--pmute)}
+.sheet-lines{list-style:none}
+.sheet-line{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:12px;align-items:baseline;padding:12px 0;border-top:1px solid var(--rule);font-size:18px}
+.sheet-line:first-child{border-top:0}
+.sheet-mark{width:24px;height:24px;border:1.5px solid var(--paperink);border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;align-self:center;transition:background-color .16s,color .16s,border-color .16s}
+.sheet-line.now .sheet-mark{background:var(--paperink);color:var(--paper)}
+.sheet-line.done{color:var(--pmute)}
+.sheet-line.done .sheet-mark{border-color:var(--chart);color:var(--chart)}
+.sheet-mark svg{width:14px;height:14px}
+.sheet-mark svg path{stroke-dasharray:15}
+.sheet-line.drawn .sheet-mark svg path{animation:pen .3s ease-out both}
+.sheet-sub{font-size:13px;color:var(--pmute2);margin-top:2px}
+.sheet-min{font-size:13px;color:var(--pmute);white-space:nowrap}
+.door-act{display:flex;align-items:center;gap:12px 24px;min-height:48px;flex-wrap:wrap}
+.door-act .btn{min-width:240px}
+.door-calm{color:var(--mute);font-size:15px}
+@media (max-width:759px){.door{padding:20px 16px 28px;gap:24px}.door-line{font-size:28px;min-height:3.45em}.sheet-line{font-size:15px;grid-template-columns:24px minmax(0,1fr) auto}.door-act .btn{width:100%;min-width:0}.door-when{margin-left:0;flex-basis:100%}.door-who{flex-wrap:wrap}}
+
+/* ---- foot ---- */
+footer{margin-top:128px;border-top:1px solid var(--line)}
+.foot{display:flex;align-items:center;gap:12px 24px;flex-wrap:wrap;padding-top:24px;padding-bottom:48px;color:var(--dim-ink);font-size:13px}
+.foot p:last-child{margin-left:auto}
+@media (max-width:759px){.foot p:last-child{margin-left:0}}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+  .paper{opacity:1;transform:none}
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <a class="btn small" href="index.html" aria-label="Back to Rayane's bench" data-copy-aria="caseCoach.back">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3.5 L5.5 8 L10 12.5"/></svg><span data-copy="site.bench">Bench</span></a>
+    <nav aria-label="Sections"><a href="#exhibit" data-copy="caseCoach.nav.exhibit">Exhibit</a><a href="#maths" data-copy="caseCoach.nav.maths">Maths</a><a href="#verdict" data-copy="caseCoach.nav.verdict">Verdict</a><a href="#tonight" data-copy="caseCoach.nav.tonight">Tonight</a></nav>
+  </div>
+</header>
+
+<main>
+<section class="hero" id="top">
+  <div class="wrap">
+    <div class="lockup">
+      <h1><svg class="mk" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="12.5" fill="none" stroke="#d9b15c" stroke-width="2.4"/></svg><span data-copy="caseCoach.title">case coach</span></h1>
+      <p class="tagline" data-copy="caseCoach.tagline">Case interviews, practised out loud.</p>
+      <ul class="facts">
+        <li><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M4 8v4M7.3 5v10M10.6 7v6M13.9 4v12M17 8.5v3"/></svg><span data-copy="caseCoach.facts.0">Web, spoken both ways</span></li>
+        <li><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 13v-2.5a6.5 6.5 0 0 1 13 0V13"/><rect x="2.8" y="11.5" width="3.6" height="5.5" rx="1.2"/><rect x="13.6" y="11.5" width="3.6" height="5.5" rx="1.2"/></svg><span data-copy="caseCoach.facts.1">Headphones on</span></li>
+        <li><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17.5h9"/><path d="M12.6 3.4l3 3-7.8 7.8-3.6.6.6-3.6z"/></svg><span data-copy="caseCoach.facts.2">Paper and pen</span></li>
+      </ul>
+    </div>
+    <div class="room" id="room" role="group" aria-label="Claire asks a case question" data-copy-aria="caseCoach.room.label">
+      <span class="clk" id="clk" aria-hidden="true">04:12</span>
+      <div class="who"><div class="pres" data-state="speaking" data-voice id="heroPres"></div></div>
+      <p class="nm" data-copy="caseCoach.name">Claire</p>
+      <p class="line" id="heroLine" data-size="m"></p>
+      <div class="ctls">
+        <button class="ctl" type="button" data-hero="done"><span data-copy="caseCoach.room.controls.done">Done</span><kbd>⏎</kbd></button>
+        <button class="ctl" type="button" data-hero="moment"><span data-copy="caseCoach.room.controls.moment">Need a moment</span></button>
+        <button class="ctl" type="button" data-hero="repeat"><span data-copy="caseCoach.room.controls.repeat">Repeat</span><kbd>r</kbd></button>
+      </div>
+      <button class="btn glyph pp" type="button" data-pause="hero"></button>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="exhibit" aria-labelledby="h-ex">
+  <div class="wrap">
+    <div class="sec-h"><h2 id="h-ex" data-copy="caseCoach.exhibit.title">Paper on the desk</h2><p class="lede" data-copy="caseCoach.exhibit.lede">The exhibit lands on paper. She looks at it before you do.</p></div>
+    <div class="frame xroom" id="xroom" role="group" aria-label="Exhibit" data-copy-aria="caseCoach.exhibit.label">
+      <div class="rail">
+        <div class="who"><div class="pres" data-state="listening" data-voice id="xPres"></div></div>
+        <p class="nm" data-copy="caseCoach.name">Claire</p>
+        <p class="rl" id="xLine"></p>
+        <div class="tray"><span class="tray-lbl" data-copy="caseCoach.exhibit.shown">Shown</span><button class="tab" type="button" data-x="0">1</button><button class="tab" type="button" data-x="1">2</button></div>
+      </div>
+      <div class="desk"><div class="sheet-stack paper in" id="xPaper"><div class="sheet-under"></div><div class="sheet" id="xBody"></div></div></div>
+      <button class="btn glyph pp" type="button" data-pause="x"></button>
+    </div>
+  </div>
+</section>
+
+<section class="sec side" id="maths" aria-labelledby="h-ma">
+  <div class="wrap">
+    <div class="sec-h"><h2 id="h-ma" data-copy="caseCoach.maths.title">Ten quick sums</h2><p class="lede" data-copy="caseCoach.maths.lede">Said out loud, answered out loud. Three right in a row and the dots join up.</p></div>
+    <div class="frame droom" id="droom" role="group" aria-label="Maths drill" data-copy-aria="caseCoach.maths.label">
+      <div class="drill" id="drill">
+        <div class="who"><div class="pres" data-state="speaking" data-voice id="drillPres"></div></div>
+        <p class="nm" data-copy="caseCoach.name">Claire</p>
+        <p class="sum" id="sum"></p>
+        <p class="ans" id="ans"></p>
+        <div class="chain" id="chain"></div>
+      </div>
+      <div class="dend" id="dend">
+        <div class="score"><svg viewBox="0 0 132 132" aria-hidden="true"><circle class="bg" cx="66" cy="66" r="60" fill="none" stroke-width="4"/><circle class="arc" id="arc" cx="66" cy="66" r="60" fill="none" stroke-width="4" stroke-linecap="round" transform="rotate(-90 66 66)" stroke-dasharray="377" stroke-dashoffset="377"/></svg><div class="fig"><b data-copy="caseCoach.maths.score">8</b><span data-copy="caseCoach.maths.of">/10</span></div></div>
+        <div class="chain" id="chainEnd"></div>
+        <div class="drainbar"><i></i></div>
+      </div>
+      <button class="btn glyph pp" type="button" data-pause="drill"></button>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="verdict" aria-labelledby="h-db">
+  <div class="wrap">
+    <div class="sec-h"><h2 id="h-db" data-copy="caseCoach.debrief.title">The verdict, on a sheet</h2><p class="lede" data-copy="caseCoach.debrief.lede">One word, the moment it slipped, and a second go at it.</p></div>
+    <div class="frame dbroom" id="dbroom">
+      <div class="band" id="band" data-state="">
+        <div class="who"><div class="pres sm" data-state="thinking" data-voice id="bandPres"></div></div>
+        <div class="band-text"><b data-copy="caseCoach.name">Claire</b><span class="band-line" id="bandLine"></span><span class="band-sub" id="bandSub"></span></div>
+        <div class="band-act" id="bandAct"></div>
+      </div>
+      <div class="sheet-stack slipwrap"><div class="sheet-under"></div><div class="sheet"><div class="slip-body" id="slipBody"></div></div></div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="tonight" aria-labelledby="h-tn">
+  <div class="wrap">
+    <div class="sec-h"><h2 id="h-tn" data-copy="caseCoach.tonight.title">Tonight's plan</h2><p class="lede" data-copy="caseCoach.tonight.lede">Three lines at most. Each one gets a tick in pen.</p></div>
+    <div class="frame door" id="door">
+      <div class="door-who"><div class="who"><div class="pres sm" data-state="thinking" id="doorPres"></div></div><span class="door-name" data-copy="caseCoach.name">Claire</span><span class="door-when" data-copy="caseCoach.tonight.when">12 days to the final round</span></div>
+      <p class="door-line"><span id="doorRest"></span></p>
+      <div class="sheet-stack"><div class="sheet-under"></div>
+        <div class="sheet">
+          <p class="sheet-h"><b class="lab" data-copy="caseCoach.tonight.sheet">Today</b><span data-copy="caseCoach.tonight.total">46 min</span></p>
+          <ol class="sheet-lines" id="plan"></ol>
+        </div>
+      </div>
+      <div class="door-act" id="doorAct"></div>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <a class="btn small" href="index.html"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3.5 L5.5 8 L10 12.5"/></svg><span data-copy="site.benchBack">Back to the bench</span></a>
+    <p data-copy="caseCoach.invented">Invented case, figures and verdicts.</p>
+    <p data-copy="caseCoach.footer">Designed and built by Rayane El Metni.</p>
+  </div>
+</footer>
+
+<script>
+(function(){
+"use strict";
+var root = document.documentElement;
+var COPY = window.COPY || {}, C = COPY.caseCoach || {};
+var RM = matchMedia("(prefers-reduced-motion: reduce)").matches;
+var $ = function(s, r){ return (r || document).querySelector(s); };
+var $$ = function(s, r){ return [].slice.call((r || document).querySelectorAll(s)); };
+
+/* ---------- copy: every word comes from copy.js ---------- */
+function cget(p){ return p.split(".").reduce(function(o, k){ return o == null ? o : o[k]; }, COPY); }
+$$("[data-copy]").forEach(function(el){ var v = cget(el.dataset.copy); if (typeof v === "string") el.textContent = v; });
+$$("[data-copy-aria]").forEach(function(el){ var v = cget(el.dataset.copyAria); if (typeof v === "string") el.setAttribute("aria-label", v); });
+if (C.title) { document.title = C.title; var md = $("meta[name=description]"); if (md) md.setAttribute("content", C.description); }
+var esc = function(s){ return String(s).replace(/[&<>"]/g, function(c){ return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); };
+
+/* ---------- her face, exactly as case-coach web/components.js 75-90 ---------- */
+var faces = 0;
+function faceSVG(){
+  var id = "fc" + (++faces);
+  var eye = function(x){ return '<g transform="translate(' + x + ',-5)"><ellipse rx="6.5" ry="4.2" fill="#f4efe4"/><g class="f-look"><circle class="f-iris" r="3.2" fill="#3b2d24"/></g><rect class="f-lid" x="-7.5" y="-6" width="15" height="9.5" fill="#c99a7e"/></g>'; };
+  return '<svg class="face" viewBox="-80 -80 160 160" aria-hidden="true" focusable="false"><defs><clipPath id="' + id + '"><circle r="71"/><rect x="-64" y="0" width="128" height="80"/></clipPath></defs>' +
+    '<circle class="f-bg" r="71"/><g clip-path="url(#' + id + ')"><g transform="translate(0,4)"><g class="f-body">' +
+    '<path d="M-62 92 C-58 60 -30 50 0 50 C30 50 58 60 62 92 Z" fill="#2a3140"/><path d="M-12 34 L-12 54 L12 54 L12 34 Z" fill="#b98a6e"/><path d="M-12 52 L0 66 L12 52" fill="none" stroke="#e9ecef" stroke-width="2"/>' +
+    '<g class="f-head"><path d="M-44 -6 C-48 -52 -20 -66 0 -66 C24 -66 50 -52 44 -4 C46 20 40 40 34 46 L-34 46 C-40 38 -46 20 -44 -6 Z" fill="#2b211c"/>' +
+    '<ellipse cy="-4" rx="34" ry="42" fill="#c99a7e"/><path d="M-36 -14 C-34 -48 -8 -54 6 -52 C24 -50 38 -40 36 -14 C26 -30 8 -38 -36 -14 Z" fill="#2b211c"/>' +
+    '<g class="f-brows" fill="none" stroke="#2b211c" stroke-width="2.2" stroke-linecap="round"><path d="M-22 -16 Q-14 -20 -6 -16"/><path d="M6 -16 Q14 -20 22 -16"/></g>' +
+    eye(-14) + eye(14) + '<path d="M0 0 Q-3 10 -1 14" stroke="#a77a60" stroke-width="1.4" fill="none"/><ellipse class="f-mouth" cy="22" rx="8" ry="1.2" fill="#5a2c2c"/></g></g></g></g></svg>';
+}
+$$(".pres").forEach(function(el){ el.classList.add("ringbox"); el.innerHTML = '<div class="ring-halo"></div><div class="ring-core"></div>' + faceSVG(); });
+
+function restart(el, cls){ el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); }
+var sizeOf = function(s){ return s.length <= 48 ? "s" : s.length <= 96 ? "m" : s.length <= 150 ? "l" : "xl"; };
+function say(el, txt, force){ if (!force && el.textContent === txt) return; el.textContent = txt; el.dataset.size = sizeOf(txt); restart(el, "swap"); }
+function glance(p){ restart(p, "glance"); clearTimeout(p._g); p._g = setTimeout(function(){ p.classList.remove("glance"); }, 1900); }
+
+/* ---------- one clock for every scene; a scene runs only on screen and only while not paused ---------- */
+var scenes = [];
+function Scene(el, total, steps, opts){
+  opts = opts || {};
+  this.el = el; this.total = total; this.steps = steps.sort(function(a, b){ return a[0] - b[0]; });
+  this.t = 0; this.i = 0; this.playing = false; this.held = false; this.visible = true; this.reset = opts.reset; this.loop = opts.loop !== false;
+  var self = this;
+  new IntersectionObserver(function(es){ self.visible = es[0].isIntersecting; el.classList.toggle("offscreen", !self.visible); }, { rootMargin: "60px" }).observe(el);
+  scenes.push(this);
+}
+Scene.prototype.fire = function(upto){ while (this.i < this.steps.length && this.steps[this.i][0] <= upto) { this.steps[this.i][1](); this.i++; } };
+Scene.prototype.tick = function(dt){
+  if (!this.playing || this.held || this.wait || !this.visible) return;
+  this.t += dt; this.fire(this.t);
+  if (this.t >= this.total) { if (!this.loop) { this.playing = false; return; } this.seek(0); }
+};
+Scene.prototype.seek = function(t){ this.t = 0; this.i = 0; if (this.reset) this.reset(); this.fire(t); this.t = t; };
+
+/* below the fold a scene rewinds while it is still out of sight, then plays once it is a third in view */
+function arm(sc){
+  sc.stale = true; sc.primed = false;
+  new IntersectionObserver(function(es){
+    if (!es[0].isIntersecting) { sc.stale = true; sc.primed = false; sc.playing = false; return; }
+    if (sc.stale && !sc.primed && !RM) { sc.seek(0); sc.primed = true; }
+  }, { rootMargin: "0px 0px 10% 0px" }).observe(sc.el);
+  new IntersectionObserver(function(es){
+    if (!es[0].isIntersecting || !sc.stale || RM) return;
+    if (!sc.primed) sc.seek(0);
+    sc.stale = false; sc.primed = false; sc.playing = true;
+  }, { threshold: .3 }).observe(sc.el);
+}
+
+/* a visible pause on every room that keeps moving */
+var PAUSE = '<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M3 2h3v10H3zM8 2h3v10H8z" fill="currentColor"/></svg>';
+var PLAY = '<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M3.5 2l8 5-8 5z" fill="currentColor"/></svg>';
+function syncPause(btn, sc){ btn.innerHTML = sc.held ? PLAY : PAUSE; btn.setAttribute("aria-label", sc.held ? C.play : C.pause); sc.el.classList.toggle("still", sc.held); }
+function hold(sc, on){ sc.held = on; var b = $('[data-pause="' + sc.name + '"]'); if (b) syncPause(b, sc); }
+
+/* simulated voice: syllable-like bursts while she talks, his quieter voice while he answers (from Claire's face board) */
+var voiced = [];
+function level(state, t){
+  if (state === "speaking") return Math.max(0, Math.abs(Math.sin(t * 8.7) * Math.sin(t * 2.9 + 1)) * .95 - (Math.sin(t * 1.3) > .85 ? .6 : 0));
+  if (state === "listening") return Math.max(0, Math.abs(Math.sin(t * 7.1) * Math.sin(t * 1.7)) * .45);
+  return 0;
+}
+function voice(el, sc, off){ voiced.push({ el: el, sc: sc, off: off }); }
+
+/* ================= HERO: the room ================= */
+var room = $("#room"), heroPres = $("#heroPres"), heroLine = $("#heroLine"), HL = C.room.lines;
+var waiting = false;
+function st(s){ heroPres.dataset.state = s; }
+var SPEAK = [0, 8.8, 14.8];
+var hero = new Scene(room, 21.6, [
+  [0, function(){ st("speaking"); say(heroLine, HL[0]); }],
+  [4.4, function(){ st("listening"); }],
+  [7.6, function(){ st("thinking"); }],
+  [8.8, function(){ st("speaking"); say(heroLine, HL[1]); }],
+  [11.8, function(){ st("listening"); }],
+  [13.8, function(){ st("thinking"); }],
+  [14.8, function(){ st("speaking"); say(heroLine, HL[2]); }],
+  [18.4, function(){ st("listening"); }]
+]);
+hero.name = "hero";
+voice(heroPres, hero, 0);
+hero.seek(0); hero.playing = !RM;
+/* Need a moment stops her clock (she waits); the pause plate freezes the room. They are two different things. */
+function resume(){ waiting = false; hero.wait = false; if (hero.held) hold(hero, false); }
+var act = {
+  done: function(){ var was = waiting; resume(); var t = hero.t + (was ? -0.01 : 0); var n = SPEAK.filter(function(s){ return s > t + .05; })[0]; hero.seek(n === undefined ? 0 : n); hero.playing = true; },
+  repeat: function(){ resume(); var s = SPEAK.filter(function(x){ return x <= hero.t + .01; }).pop() || 0; hero.seek(s); heroLine.textContent = ""; say(heroLine, HL[SPEAK.indexOf(s)], true); hero.playing = true; },
+  moment: function(){ if (waiting) { act.done(); return; } waiting = true; hero.wait = true; if (hero.held) hold(hero, false); st("waiting"); say(heroLine, C.room.moment); }
+};
+$$("[data-hero]").forEach(function(b){ b.addEventListener("click", function(){ act[b.dataset.hero](); b.blur(); showUI(3200); }); });
+// the controls stay; on a mouse or trackpad they rest after a quiet spell and any move, tap or key brings them back (touch: always shown)
+var uiT;
+function showUI(ms){ room.classList.remove("rest"); clearTimeout(uiT); if (!RM) uiT = setTimeout(function(){ room.classList.add("rest"); }, ms || 3200); }
+showUI(7400);
+["pointermove", "pointerdown", "keydown", "wheel"].forEach(function(ev){ document.addEventListener(ev, function(){ showUI(3200); }, { passive: true }); });
+var heroSeen = true;
+new IntersectionObserver(function(es){ heroSeen = es[0].isIntersecting; }, { threshold: .4 }).observe(room);
+document.addEventListener("keydown", function(e){
+  if (!heroSeen || e.metaKey || e.ctrlKey || e.repeat) return;
+  var a = document.activeElement, free = !a || a === document.body;
+  if (e.key === "r" || e.key === "R") { act.repeat(); showUI(3200); }
+  else if (e.key === "Enter" && free) { act.done(); showUI(3200); }
+});
+// the elapsed time, the only clock on screen
+var elapsed = 252, clk = $("#clk");
+setInterval(function(){ if (!hero.playing || hero.held || !hero.visible || RM) return; elapsed++; clk.textContent = String(Math.floor(elapsed / 60)).padStart(2, "0") + ":" + String(elapsed % 60).padStart(2, "0"); }, 1000);
+// the entrance runs once on load; Start at the end of the page runs it again
+var enterT;
+function enter(){ if (RM) return; root.classList.remove("entering"); void root.offsetWidth; root.classList.add("entering"); clearTimeout(enterT); enterT = setTimeout(function(){ root.classList.remove("entering"); }, 1500); }
+if (root.classList.contains("entering")) enterT = setTimeout(function(){ root.classList.remove("entering"); }, 1500);
+
+/* ================= EXHIBIT: paper on the desk ================= */
+var X = C.exhibit, xroom = $("#xroom"), xPres = $("#xPres"), xLine = $("#xLine"), paper = $("#xPaper"), xBody = $("#xBody"), tabs = $$("#xroom .tab");
+function chartHTML(){
+  var ch = X.chart, max = 70, base = 350, top = 20, k = (base - top) / max, y = function(v){ return base - v * k; }, s = "";
+  for (var v = 0; v <= max; v += 20) {
+    s += '<line x1="64" x2="750" y1="' + y(v) + '" y2="' + y(v) + '" stroke="' + (v ? "#e4ddcb" : "#1d2026") + '" stroke-width="1"/>';
+    s += '<text x="52" y="' + (y(v) + 5) + '" text-anchor="end" font-size="14" fill="#6b6558">' + v + '</text>';
+  }
+  ch.rows.forEach(function(r, i){
+    var gx = 84 + i * 168;
+    [[r[1], "#8a8f99", gx + 14], [r[2], "#3f6196", gx + 76]].forEach(function(b){
+      s += '<rect x="' + b[2] + '" y="' + y(b[0]) + '" width="56" height="' + (b[0] * k) + '" fill="' + b[1] + '"/>';
+      s += '<text x="' + (b[2] + 28) + '" y="' + (y(b[0]) - 8) + '" text-anchor="middle" font-size="15" font-weight="600" fill="#1d2026">' + b[0] + '</text>';
+    });
+    s += '<text x="' + (gx + 73) + '" y="' + (base + 28) + '" text-anchor="middle" font-size="15" fill="#1d2026">' + esc(r[0]) + '</text>';
+  });
+  var kp = 230 / max, q = "";
+  ch.rows.forEach(function(r, i){
+    var gy = 6 + i * 92;
+    q += '<text x="0" y="' + (gy + 13) + '" font-size="14" fill="#1d2026">' + esc(r[0]) + '</text>';
+    [[r[1], "#8a8f99", gy + 22], [r[2], "#3f6196", gy + 48]].forEach(function(b){
+      q += '<rect x="0" y="' + b[2] + '" width="' + (b[0] * kp) + '" height="22" fill="' + b[1] + '"/><text x="' + (b[0] * kp + 8) + '" y="' + (b[2] + 16) + '" font-size="14" font-weight="600" fill="#1d2026">' + b[0] + '</text>';
+    });
+  });
+
+  var lbl = esc(ch.title);
+  return '<div class="xh"><b>' + esc(ch.title) + '</b><span class="legend"><span><i style="background:var(--x-grey)"></i>' + esc(ch.series[0]) + '</span><span><i style="background:var(--x-blue)"></i>' + esc(ch.series[1]) + '</span></span></div>' +
+    '<svg class="xchart wide" viewBox="0 0 760 390" role="img" aria-label="' + lbl + '">' + s + '</svg>' +
+    '<svg class="xchart narrow" viewBox="0 0 320 376" role="img" aria-label="' + lbl + '">' + q + '</svg>' +
+    '<p class="xnote">' + esc(X.note) + '</p>';
+}
+function tableHTML(){
+  var tb = X.table;
+  return '<div class="xh"><b>' + esc(tb.title) + '</b></div><table class="xtable"><thead><tr><th>' + esc(tb.head[0]) + '</th><th>' + esc(tb.head[1]) + '</th></tr></thead><tbody>' +
+    tb.rows.map(function(r){ return '<tr><td>' + esc(r[0]) + '</td><td>' + esc(r[1]) + '</td></tr>'; }).join("") + '</tbody></table><p class="xnote">' + esc(X.note) + '</p>';
+}
+var SHEETS = [chartHTML(), tableHTML()], xT;
+tabs.forEach(function(t, i){ t.setAttribute("aria-label", X.show + " " + (i + 1)); });
+function setTabs(i){ tabs.forEach(function(t, k){ t.setAttribute("aria-pressed", String(k === i)); }); }
+function showSheet(i, animate){
+  tabs[i].hidden = false; setTabs(i); clearTimeout(xT);
+  if (!animate || RM) { xBody.innerHTML = SHEETS[i]; paper.classList.add("in"); return; }
+  var was = paper.classList.contains("in");
+  paper.classList.remove("in");
+  xT = setTimeout(function(){ xBody.innerHTML = SHEETS[i]; void paper.offsetWidth; paper.classList.add("in"); glance(xPres); }, was ? 220 : 40);
+}
+var xScene = new Scene(xroom, 14, [
+  [0, function(){ xPres.dataset.state = "speaking"; say(xLine, X.says[0]); }],
+  [0.9, function(){ showSheet(0, true); }],
+  [3.4, function(){ say(xLine, X.asks); }],
+  [4.8, function(){ xPres.dataset.state = "listening"; }],
+  [7.8, function(){ xPres.dataset.state = "speaking"; say(xLine, X.says[1]); showSheet(1, true); }],
+  [10.2, function(){ say(xLine, X.asks); }],
+  [11.4, function(){ xPres.dataset.state = "listening"; }]
+], { reset: function(){ clearTimeout(xT); paper.classList.remove("in"); tabs.forEach(function(t){ t.hidden = true; }); } });
+xScene.name = "x";
+voice(xPres, xScene, 1.7);
+tabs.forEach(function(t, i){ t.addEventListener("click", function(){ hold(xScene, true); showSheet(i, true); }); });
+// rest state, also the reduced-motion state: the chart on the desk, both tabs, her question
+showSheet(0, false); tabs[1].hidden = false; xLine.textContent = X.asks;
+arm(xScene);
+
+/* ================= MATHS: the drill room ================= */
+var SUMS = C.maths.sums, drill = $("#drill"), dend = $("#dend"), chain = $("#chain"), chainEnd = $("#chainEnd"), sumEl = $("#sum"), ansEl = $("#ans"), drillPres = $("#drillPres"), arc = $("#arc");
+var streak = 0, run = [];
+function buildChain(el){ el.innerHTML = ""; SUMS.forEach(function(){ var d = document.createElement("span"); d.className = "rc"; el.append(d); }); }
+function drillReset(){
+  buildChain(chain); streak = 0; run = [];
+  dend.classList.remove("on"); dend.setAttribute("aria-hidden", "true"); drill.classList.remove("out"); drill.removeAttribute("aria-hidden");
+  arc.setAttribute("stroke-dashoffset", "377"); sumEl.textContent = ""; ansEl.textContent = "";
+}
+function mark(i){
+  var d = chain.querySelectorAll(".rc")[i], kind = SUMS[i][1];
+  d.classList.remove("now");
+  var n = chain.querySelector(".rc-n"); if (n) n.remove();
+  if (kind === "hit") {
+    streak++; run.push(d); d.classList.add("hit"); restart(d, "pop");
+    if (streak >= 3) { run.forEach(function(x){ x.classList.add("hot"); }); var c = document.createElement("span"); c.className = "rc-n"; c.textContent = streak; d.after(c); }
+  } else { streak = 0; run = []; d.classList.add(kind); }
+}
+var dsteps = [], at = .3;
+SUMS.forEach(function(s, i){
+  var t0 = at;
+  dsteps.push([t0, function(){ drillPres.dataset.state = "speaking"; say(sumEl, s[0]); ansEl.textContent = ""; chain.querySelectorAll(".rc")[i].classList.add("now"); }]);
+  dsteps.push([t0 + .75, function(){ drillPres.dataset.state = s[1] === "skip" ? "thinking" : "listening"; }]);
+  dsteps.push([t0 + 1.3, function(){ mark(i); drillPres.dataset.state = "speaking"; if (s[2]) say(ansEl, s[2]); }]);
+  at += s[1] === "miss" ? 2.7 : 1.7;
+});
+dsteps.push([at + .2, function(){
+  drill.classList.add("out"); drill.setAttribute("aria-hidden", "true");
+  chainEnd.innerHTML = chain.innerHTML; $$(".pop,.now", chainEnd).forEach(function(x){ x.classList.remove("pop", "now"); });
+  var n = chainEnd.querySelector(".rc-n"); if (n) n.remove();
+  dend.classList.add("on"); dend.removeAttribute("aria-hidden");
+  requestAnimationFrame(function(){ arc.setAttribute("stroke-dashoffset", String(377 * (1 - (+C.maths.score || 8) / 10))); });
+}]);
+var drillScene = new Scene($("#droom"), at + 6.8, dsteps, { reset: drillReset });
+drillScene.name = "drill";
+voice(drillPres, drillScene, 3.1);
+drillReset(); drillScene.seek(at + .3); // rest: the score and the whole chain
+arm(drillScene);
+
+/* ================= DEBRIEF: the band and the sheet ================= */
+var D = C.debrief, band = $("#band"), bandPres = $("#bandPres"), bandLine = $("#bandLine"), bandSub = $("#bandSub"), bandAct = $("#bandAct"), slipBody = $("#slipBody");
+var SLIP = '<div class="slip-a"><div><span class="lab">' + esc(D.verdictLabel) + '</span><div class="outcome">' + esc(D.verdict) + '</div></div>' +
+  '<p class="slip-words">' + esc(D.words) + '</p><p class="slip-gap">' + esc(D.gap) + '</p>' +
+  '<div class="slip-part slip-next"><span class="lab">' + esc(D.nextLabel) + '</span><p>' + esc(D.next) + '</p></div>' +
+  '<div class="slip-act"><button class="btn primary" type="button" data-db="again">' + esc(D.again) + '</button></div></div>' +
+  '<div class="slip-b"><div class="slip-part"><span class="lab">' + esc(D.momentLabel) + '</span><p class="said">' + esc(D.said) + '</p>' +
+  '<div class="slip-hear"><span class="tstamp">' + esc(D.stamp) + '</span><button class="btn small onpaper" type="button" data-db="hear"><span class="play"></span>' + esc(D.hearYourself) + '</button></div>' +
+  '<p class="why">' + esc(D.why) + '</p><span class="lab">' + esc(D.couldLabel) + '</span><p class="said">' + esc(D.could) + '</p></div></div>';
+var WAIT = '<span class="lab">' + esc(D.verdictLabel) + '</span><div class="slip-wait" role="img" aria-label="' + esc(D.writing) + '"><i></i><i></i><i></i></div>';
+var AGAIN = '<p class="againq">' + esc(D.againQ) + '</p><div class="ba"><div class="before"><span class="lab">' + esc(D.before) + '</span><p class="said">' + esc(D.beforeLine) + '</p></div>' +
+  '<div><span class="lab">' + esc(D.after) + '</span><p class="said">' + esc(D.afterLine) + '</p></div></div><p class="fixed">' + esc(D.fixed) + '</p>' +
+  '<div class="slip-act"><button class="btn small onpaper" type="button" data-db="back">' + esc(D.backToSheet) + '</button></div>';
+var BTN = function(kind, label, extra){ return '<button class="btn small" type="button" data-db="' + kind + '">' + esc(label) + (extra || "") + '</button>'; };
+function bandSet(state, line, sub, actHTML){
+  band.dataset.state = state; bandPres.dataset.state = state || "thinking";
+  if (line !== undefined && bandLine.textContent !== line) say(bandLine, line);
+  bandSub.textContent = sub || ""; bandAct.innerHTML = actHTML || "";
+}
+function slip(html){ slipBody.innerHTML = html; slipBody.classList.toggle("two", html === SLIP); if (!RM) restart(slipBody, "swap"); }
+var quiet = function(){ bandSet("", D.verdictLine, "", BTN("verdict", D.hearVerdict)); };
+var dbT;
+var debScene = new Scene($("#dbroom"), 10, [
+  [0, function(){ clearTimeout(dbT); slip(WAIT); bandSet("listening", D.ask, "", BTN("skip", D.skip, " <kbd>Esc</kbd>")); }],
+  [1.6, function(){ bandSub.textContent = D.his; restart(bandSub, "swap"); }],
+  [3.4, function(){ bandSet("thinking", D.writing); }],
+  [5.6, function(){ slip(SLIP); bandSet("speaking", D.verdictLine); }],
+  [9.6, quiet]
+], { loop: false });
+debScene.name = "db";
+voice(bandPres, debScene, 2.3);
+$("#dbroom").addEventListener("click", function(e){
+  var b = e.target.closest("[data-db]"); if (!b) return;
+  var k = b.dataset.db; clearTimeout(dbT);
+  if (k === "skip" || k === "verdict") { debScene.seek(5.6); debScene.playing = true; }
+  else if (k === "hear") { debScene.playing = false; bandSet("listening", D.playing); dbT = setTimeout(quiet, RM ? 0 : 3200); }
+  else if (k === "again") {
+    debScene.playing = false; bandSet("speaking", D.againQ);
+    if (RM) { slip(AGAIN); quiet(); return; }
+    dbT = setTimeout(function(){ bandSet("listening", D.againQ); dbT = setTimeout(function(){ slip(AGAIN); quiet(); var bk = $('[data-db="back"]'); if (bk) bk.focus({ preventScroll: true }); }, 2400); }, 1800);
+  }
+  else if (k === "back") { slip(SLIP); quiet(); var ag = $('[data-db="again"]'); if (ag) ag.focus({ preventScroll: true }); }
+});
+function inView(el){ var r = el.getBoundingClientRect(), vh = innerHeight; return Math.min(r.bottom, vh) - Math.max(r.top, 0) > Math.min(r.height, vh) * .4; }
+document.addEventListener("keydown", function(e){ if (e.key === "Escape" && $('[data-db="skip"]') && inView($("#dbroom"))) { debScene.seek(5.6); debScene.playing = true; } });
+slip(SLIP); quiet(); // rest
+arm(debScene);
+
+/* ================= TONIGHT: the front door, ticked as you scroll (the one scroll-scrubbed scene) ================= */
+var T = C.tonight, plan = $("#plan"), doorRest = $("#doorRest"), doorAct = $("#doorAct"), door = $("#door");
+var TICK = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5l3 3 7-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+plan.innerHTML = T.lines.map(function(l, i){
+  return '<li class="sheet-line"><span class="sheet-mark">' + (i + 1) + '</span><div><div>' + esc(l.title) + '</div>' + (l.sub ? '<div class="sheet-sub">' + esc(l.sub) + '</div>' : "") + '</div><span class="sheet-min">' + esc(l.min) + '</span></li>';
+}).join("");
+var lines = $$(".sheet-line", plan), stage = -1;
+doorAct.innerHTML = '<button class="btn primary lg" type="button" id="doorStart">' + esc(T.start) + '</button><span class="door-calm" hidden>' + esc(T.done) + '</span>';
+var startBtn = $("#doorStart"), calm = $(".door-calm", doorAct);
+function setStage(n, animate){
+  if (n === stage) return;
+  lines.forEach(function(li, i){
+    var m = li.firstElementChild, wasDone = li.classList.contains("done");
+    li.classList.remove("now", "done", "drawn");
+    if (i < n) { li.classList.add("done"); m.innerHTML = TICK; if (animate && !wasDone) li.classList.add("drawn"); }
+    else { m.textContent = i + 1; if (i === n) li.classList.add("now"); }
+  });
+  doorRest.textContent = T.rest[Math.min(n, 3)];
+  if (stage >= 0 && animate) restart(doorRest, "swap");
+  var fin = n >= lines.length; calm.hidden = !fin; /* Start stays: it is the way back into the room */
+  stage = n;
+}
+startBtn.addEventListener("click", function(){
+  window.scrollTo({ top: 0, behavior: RM ? "auto" : "smooth" });
+  setTimeout(function(){ resume(); hold(hero, false); hero.seek(0); hero.playing = !RM; enter(); showUI(7400); }, RM ? 0 : 450);
+});
+if (RM) setStage(3, false);
+else {
+  setStage(0, false);
+  var queued = false;
+  var scrub = function(){
+    queued = false;
+    var r = door.getBoundingClientRect(), vh = innerHeight;
+    var p = (vh * .78 - r.top) / Math.max(1, r.height * .8);
+    setStage(p >= .82 ? 3 : p >= .56 ? 2 : p >= .3 ? 1 : 0, true);
+  };
+  addEventListener("scroll", function(){ if (!queued) { queued = true; requestAnimationFrame(scrub); } }, { passive: true });
+  addEventListener("resize", scrub); scrub();
+}
+
+/* ================= pause plates ================= */
+var byName = { hero: hero, x: xScene, drill: drillScene };
+$$("[data-pause]").forEach(function(b){
+  var sc = byName[b.dataset.pause]; syncPause(b, sc);
+  b.addEventListener("click", function(){
+    hold(sc, !sc.held); if (!sc.held && !sc.playing) sc.playing = true;
+  });
+});
+
+/* ================= the clock ================= */
+var last = performance.now();
+function frame(now){
+  var dt = Math.min(.1, (now - last) / 1000); last = now;
+  scenes.forEach(function(s){ s.tick(dt); });
+  var t = now / 1000;
+  voiced.forEach(function(v){
+    var L = (RM || v.sc.held || !v.sc.visible) ? 0 : level(v.el.dataset.state, t + v.off);
+    v.el.style.setProperty("--lvl", L.toFixed(3));
+  });
+  requestAnimationFrame(frame);
+}
+if (RM) { hold(hero, false); hero.playing = false; }
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
