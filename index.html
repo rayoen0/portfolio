@@ -106,7 +106,7 @@ kbd{font:600 12px/1 var(--cond);border:1px solid currentColor;border-color:color
 .obj:focus-visible .mlabel b{outline:2px solid var(--focus);outline-offset:4px;border-radius:3px}
 .obj:focus-visible .body{outline:2px dashed var(--focus);outline-offset:12px;border-radius:14px}
 /* label: the bench measures each object; the name sits on the dimension line */
-.mlabel{position:absolute;left:0;right:0;top:calc(100% + 18px);height:24px;pointer-events:none;color:var(--print);transition:opacity .3s var(--ease-out)}
+.mlabel{position:absolute;left:0;right:0;top:calc(100% + 18px);height:24px;pointer-events:auto;color:var(--print);transition:opacity .3s var(--ease-out)}
 .mlabel::before{content:"";position:absolute;left:0;right:0;top:12px;border-top:1px solid currentColor;opacity:.2}
 .mlabel::after{content:"";position:absolute;left:0;right:0;top:6px;height:13px;border-left:1px solid currentColor;border-right:1px solid currentColor;opacity:.2}
 .mlabel b{position:absolute;left:50%;top:0;transform:translateX(-50%);padding:0 10px;background:color-mix(in oklab,var(--mat),var(--wash) var(--wash-amt));transition:color .5s var(--ease-out),background-color .7s var(--ease-out);
@@ -755,11 +755,14 @@ applyCopy();
   }catch(e){}
 })();
 
-/* ================= crux dial: one drawing, any camera ================= */
+/* ================= crux dial: the R5 whole-day ring, the same drawing as crux.html's hero (copied from it) ================= */
+var K={date:(COPY.worlds&&COPY.worlds.crux&&COPY.worlds.crux.date)||''};
+function hm(t){var h=Math.floor(t+1e-6),m=Math.round((t-h)*60);if(m===60){h++;m=0;}h=h%24;return (h<10?'0':'')+h+':'+(m<10?'0':'')+m;}
 var KC={dark:{ground:'#14110D',plate:'#1C1813',track:'#2A2219',spent:'#55483A',hair:'#2E261D',ink3:'#776C5E',ink2:'#ABA091',ink:'#F4EEE4',hi:'#E3763F',dim:'#7B3A21',edge:'#FFFFFF'},
         light:{ground:'#F4EFE6',plate:'#FFFCF6',track:'#E8DFCE',spent:'#C9BAA1',hair:'#DCD2C2',ink3:'#9A8E79',ink2:'#6E6453',ink:'#211C15',hi:'#C4551F',dim:'#D8C6AC',edge:'#211C15'}};
 var DAY={now:22+20/60,block:[22+7/60,22+52/60],done:[[19,19+40/60,.91],[20+10/60,21,.62],[21+15/60,21+45/60,.38]],next:[23,23.5],seat:172};
-var SEAT0=((DAY.now%12)*30)-90; /* natural angle of now on the 12 h day dial: 220 deg */
+var FACE=24, DPH0=360/FACE; /* the whole day on the ring: 15 degrees an hour, midnight at the top */
+var SEAT0=(DAY.now%FACE)*DPH0-90;
 function rad(a){return a*Math.PI/180;}
 function pt(cx,cy,r,a){return [cx+r*Math.cos(rad(a)),cy+r*Math.sin(rad(a))];}
 function f2(n){return Math.round(n*100)/100;}
@@ -769,7 +772,6 @@ function sector(cx,cy,r1,r2,a0,a1){
   var L=(a1-a0)>180?1:0,o0=pt(cx,cy,r2,a0),o1=pt(cx,cy,r2,a1),i1=pt(cx,cy,r1,a1),i0=pt(cx,cy,r1,a0);
   return 'M'+f2(o0[0])+' '+f2(o0[1])+'A'+f2(r2)+' '+f2(r2)+' 0 '+L+' 1 '+f2(o1[0])+' '+f2(o1[1])+'L'+f2(i1[0])+' '+f2(i1[1])+'A'+f2(r1)+' '+f2(r1)+' 0 '+L+' 0 '+f2(i0[0])+' '+f2(i0[1])+'Z';
 }
-/* level disc: the filled AREA is the share; flat waterline */
 function segH(f){var lo=0,hi=2;for(var i=0;i<22;i++){var h=(lo+hi)/2,d=1-h,A=Math.acos(Math.max(-1,Math.min(1,d)))-d*Math.sqrt(Math.max(0,1-d*d));if(A/Math.PI<f)lo=h;else hi=h;}return (lo+hi)/2;}
 function disc(cx,cy,r,f,ring,fill,sw){
   var s='<circle cx="'+f2(cx)+'" cy="'+f2(cy)+'" r="'+f2(r)+'" fill="none" stroke="'+ring+'" stroke-width="'+f2(sw||Math.max(.8,r*.16))+'"/>';
@@ -783,18 +785,27 @@ function seg(u,a,b){return clamp01((u-a)/(b-a));}
 function eo(t){return 1-Math.pow(1-t,3);}
 function eio(t){return t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;}
 function lerp(a,b,t){return a+(b-a)*t;}
-/* u: 0 = whole day dial, 1 = settled arc. G0 = {cx,cy,R}; G1 = {px,py,R}. now: hours */
+/* where "min" starts after a count, at font size 100: measured from the same markup the static count uses, so a roll lands exactly where the still count sits */
+var MINOFF={},measureSvg=null;
+function minOff(str){
+  if(MINOFF[str]!=null)return MINOFF[str];
+  if(!measureSvg){measureSvg=document.createElementNS('http://www.w3.org/2000/svg','svg');measureSvg.setAttribute('aria-hidden','true');measureSvg.style.cssText='position:absolute;left:-9999px;top:0;width:10px;height:10px;visibility:hidden';document.body.appendChild(measureSvg);}
+  measureSvg.innerHTML='<text x="0" y="100" font-family="ui-rounded,\'SF Pro Rounded\',Nunito,-apple-system,sans-serif" font-weight="900" font-size="100" letter-spacing="-3.5">'+str+'<tspan font-family="-apple-system,BlinkMacSystemFont,Helvetica,sans-serif" font-weight="500" font-size="15" dx="8" letter-spacing="0">min</tspan></text>';
+  var x=8+str.length*58;try{x=measureSvg.querySelector('tspan').getStartPositionOfChar(0).x;}catch(e){}
+  if(!document.fonts||document.fonts.status==='loaded')MINOFF[str]=x;
+  return x;
+}
 function cruxSVG(u,G0,G1,C,opt){
   opt=opt||{};
   var now=opt.now||DAY.now;
-  var turn=eo(seg(u,0,.25)), furn=1-seg(u,.14,.29), d=eio(seg(u,.19,1)), cut=eio(seg(u,.42,1));
+  var turn=eo(seg(u,0,.25)), furn=1-seg(u,.14,.29), hubA=1-seg(u,.07,.145), d=eio(seg(u,.19,1)), cut=eio(seg(u,.42,1));
   var seat=lerp(SEAT0,DAY.seat,turn);
   var R=G1?Math.exp(lerp(Math.log(G0.R),Math.log(G1.R),d)):G0.R;
   var dir=[Math.cos(rad(DAY.seat)),Math.sin(rad(DAY.seat))];
   var p0=[G0.cx+G0.R*dir[0],G0.cy+G0.R*dir[1]];
   var p=G1?[lerp(p0[0],G1.px,d),lerp(p0[1],G1.py,d)]:p0;
   var cx=p[0]-R*dir[0], cy=p[1]-R*dir[1];
-  var W=R*lerp(.245,.142,d), dph=lerp(30,74.7,d);
+  var W=R*lerp(.245,.142,d), dph=lerp(DPH0,74.7,d);
   var before=lerp(180,42,cut), after=lerp(180,62,cut), lo=seat-before, hi=seat+after;
   function A(t){return seat+(t-now)*dph;}
   function arc(t0,t1,r1,r2,fill,op){var a0=Math.max(A(t0),lo),a1=Math.min(A(t1),hi);if(a1-a0<.05)return '';return '<path d="'+sector(cx,cy,r1,r2,a0,a1)+'" fill="'+fill+'"'+(op!=null&&op<1?' opacity="'+f2(op)+'"':'')+'/>';}
@@ -802,37 +813,38 @@ function cruxSVG(u,G0,G1,C,opt){
   var plateA=opt.plate?1-seg(u,.3,.75):0;
   if(plateA>0){s+='<circle cx="'+f2(cx)+'" cy="'+f2(cy)+'" r="'+f2(R+W/2+R*.22)+'" fill="'+C.plate+'" opacity="'+f2(plateA)+'"/>';
     s+='<circle cx="'+f2(cx)+'" cy="'+f2(cy)+'" r="'+f2(R+W/2+R*.22-.5)+'" fill="none" stroke="'+C.hair+'" opacity="'+f2(plateA)+'"/>';}
-  /* runway ring + wall tick (furniture) */
   if(furn>0){var rr=R+W/2+R*.1;
     s+='<circle cx="'+f2(cx)+'" cy="'+f2(cy)+'" r="'+f2(rr)+'" fill="none" stroke="'+C.spent+'" stroke-width="'+f2(Math.max(.8,R*.008))+'" opacity="'+f2(furn*.8)+'"/>';
     var wa=A(now+1.6),w0=pt(cx,cy,rr-R*.05,wa),w1=pt(cx,cy,rr+R*.05,wa);
     s+='<line x1="'+f2(w0[0])+'" y1="'+f2(w0[1])+'" x2="'+f2(w1[0])+'" y2="'+f2(w1[1])+'" stroke="'+C.ink+'" stroke-width="'+f2(R*.022)+'" opacity="'+f2(furn)+'"/>';}
-  /* track */
   s+='<path d="'+sector(cx,cy,r1,r2,lo,hi)+'" fill="'+C.track+'"/>';
-  /* done blocks + their level discs */
   for(var i=0;i<DAY.done.length;i++){var b=DAY.done[i];s+=arc(b[0],b[1],r1,r2,C.spent);
     if(furn>0){var m=pt(cx,cy,R,A((b[0]+b[1])/2));s+='<g opacity="'+f2(furn)+'">'+disc(m[0],m[1],W*.2,b[2],C.ink,C.ink)+'</g>';}}
-  /* next block: dotted */
   if(furn>0){var n0=A(DAY.next[0]),n1=A(DAY.next[1]);if(n1>lo&&n0<hi)s+='<path d="'+sector(cx,cy,r1+W*.08,r2-W*.08,Math.max(n0,lo),Math.min(n1,hi))+'" fill="none" stroke="'+C.ink3+'" stroke-width="'+f2(Math.max(.8,R*.008))+'" stroke-dasharray="'+f2(R*.02)+' '+f2(R*.02)+'" opacity="'+f2(furn)+'"/>';}
-  /* running block: spent dim, time left lit */
   s+=arc(DAY.block[0],now,r1,r2,C.dim);
   s+=arc(now,DAY.block[1],r1,r2,C.hi);
-  /* hour numerals */
   if(furn>0){var fsz=R*.075;s+='<g font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="'+f2(fsz)+'" fill="'+C.ink3+'" text-anchor="middle" opacity="'+f2(furn)+'">';
-    for(var h=14;h<=24;h+=2){var q=pt(cx,cy,r1-R*.12,A(h));s+='<text x="'+f2(q[0])+'" y="'+f2(q[1]+fsz*.35)+'">'+(h===24?'00':h)+'</text>';}
-    s+='</g>';
-    s+='<g opacity="'+f2(furn)+'" text-anchor="middle"><text x="'+f2(cx)+'" y="'+f2(cy-R*.17)+'" font-family="-apple-system,BlinkMacSystemFont,Helvetica,sans-serif" font-weight="600" font-size="'+f2(R*.065)+'" letter-spacing="'+f2(R*.008)+'" fill="'+C.ink3+'">FRI 6 NOV</text>'+
+    for(var h=0;h<FACE;h+=3){var hw=h;while(hw<now-FACE/2)hw+=FACE;while(hw>now+FACE/2)hw-=FACE;var q=pt(cx,cy,r1-R*.12,A(hw));s+='<text x="'+f2(q[0])+'" y="'+f2(q[1]+fsz*.35)+'">'+h+'</text>';}
+    s+='</g>';}
+  if(hubA>0){s+='<g opacity="'+f2(hubA)+'" text-anchor="middle"><text x="'+f2(cx)+'" y="'+f2(cy-R*.17)+'" font-family="-apple-system,BlinkMacSystemFont,Helvetica,sans-serif" font-weight="600" font-size="'+f2(R*.065)+'" letter-spacing="'+f2(R*.008)+'" fill="'+C.ink3+'">'+K.date+'</text>'+
       '<text x="'+f2(cx)+'" y="'+f2(cy+R*.13)+'" font-family="ui-rounded,\'SF Pro Rounded\',Nunito,-apple-system,sans-serif" font-weight="900" font-size="'+f2(R*.26)+'" letter-spacing="'+f2(-R*.008)+'" fill="'+C.ink+'">2<tspan font-size="'+f2(R*.1)+'" dx="'+f2(R*.02)+'">h</tspan><tspan dx="'+f2(R*.05)+'">15</tspan><tspan font-size="'+f2(R*.1)+'" dx="'+f2(R*.02)+'">m</tspan></text></g>';}
-  /* now-edge */
   var e0=pt(cx,cy,r1-R*.06,seat),e1=pt(cx,cy,r2+R*.05,seat);
   s+='<line x1="'+f2(e0[0])+'" y1="'+f2(e0[1])+'" x2="'+f2(e1[0])+'" y2="'+f2(e1[1])+'" stroke="'+C.edge+'" stroke-width="'+f2(Math.max(1.2,R*.0045))+'" stroke-linecap="round"/>';
-  /* the count, seated in the crook */
-  var ca=opt.countA!=null?opt.countA:seg(u,.55,.92);
-  if(ca>0){var cs=R*.23,ip=pt(cx,cy,r1-R*.07,seat),bx=ip[0],by=ip[1]+cs*.72;
-    s+='<g opacity="'+f2(ca)+'"><text x="'+f2(bx)+'" y="'+f2(by)+'" font-family="ui-rounded,\'SF Pro Rounded\',Nunito,-apple-system,sans-serif" font-weight="900" font-size="'+f2(cs)+'" letter-spacing="'+f2(-cs*.035)+'" fill="'+C.ink+'">'+(opt.count||32)+'<tspan font-family="-apple-system,BlinkMacSystemFont,Helvetica,sans-serif" font-weight="500" font-size="'+f2(cs*.15)+'" dx="'+f2(cs*.08)+'" fill="'+C.ink2+'" letter-spacing="0">min</tspan></text>';
+  var ca=opt.countA!=null?opt.countA:seg(u,.55,.92), la_=seg(u,.55,.92); /* the count stays on screen through the motion; the clocks and the mark arrive with the arc */
+  if(ca>0){var cs=R*lerp(.3,.23,d),ip=pt(cx,cy,r1-R*.07,seat),bx=ip[0],by=ip[1]+cs*.72;
+    var CF='font-family="ui-rounded,\'SF Pro Rounded\',Nunito,-apple-system,sans-serif" font-weight="900" font-size="'+f2(cs)+'" letter-spacing="'+f2(-cs*.035)+'" fill="'+C.ink+'"';
+    if(opt.roll){ /* the count rolls: the old number leaves upward, the new one rises into the crook; "min" stays put */
+      var off=minOff(String(opt.count))*cs/100,k=opt.roll.k,dy=cs*.86;
+      s+='<g opacity="'+f2(ca)+'"><defs><clipPath id="rollClip"><rect x="'+f2(bx-cs*.12)+'" y="'+f2(by-cs*.8)+'" width="'+f2(off+cs*.06)+'" height="'+f2(cs*.9)+'"/></clipPath></defs>'+
+        '<g clip-path="url(#rollClip)"><text x="'+f2(bx)+'" y="'+f2(by-k*dy)+'" opacity="'+f2(1-k)+'" '+CF+'>'+opt.roll.from+'</text><text x="'+f2(bx)+'" y="'+f2(by+(1-k)*dy)+'" opacity="'+f2(.25+.75*k)+'" '+CF+'>'+opt.count+'</text></g>'+
+        '<text x="'+f2(bx+off)+'" y="'+f2(by)+'" font-family="-apple-system,BlinkMacSystemFont,Helvetica,sans-serif" font-weight="500" font-size="'+f2(cs*.15)+'" fill="'+C.ink2+'">min</text>';
+    }else
+    s+='<g opacity="'+f2(ca)+'"><text x="'+f2(bx)+'" y="'+f2(by)+'" '+CF+'>'+(opt.count||32)+'<tspan font-family="-apple-system,BlinkMacSystemFont,Helvetica,sans-serif" font-weight="500" font-size="'+f2(cs*.15)+'" dx="'+f2(cs*.08)+'" fill="'+C.ink2+'" letter-spacing="0">min</tspan></text>';
+    s+='</g><g opacity="'+f2(Math.min(ca,la_))+'">';
     s+=disc(bx+cs*.12,by+cs*.42,cs*.075,.7,C.ink2,C.hi,cs*.012);
+    if(opt.stalled)s+='<text x="'+f2(bx+cs*.28)+'" y="'+f2(by+cs*.47)+'" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="'+f2(Math.max(10,cs*.13))+'" fill="'+C.ink3+'">'+opt.stalled+'</text>';
     var la=pt(cx,cy,r2+R*.06,A(DAY.block[0])),lb=pt(cx,cy,r2+R*.06,A(DAY.block[1])),lf=Math.max(10,R*.026);
-    s+='<g font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="'+f2(lf)+'" fill="'+C.ink3+'" text-anchor="end"><text x="'+f2(la[0])+'" y="'+f2(la[1]+lf)+'">22:07</text><text x="'+f2(lb[0])+'" y="'+f2(lb[1])+'">22:52</text></g></g>';}
+    s+='<g font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="'+f2(lf)+'" fill="'+C.ink3+'" text-anchor="end"><text x="'+f2(la[0])+'" y="'+f2(la[1]+lf)+'">'+hm(DAY.block[0])+'</text><text x="'+f2(lb[0])+'" y="'+f2(Math.max(lb[1],64+lf))+'">'+hm(DAY.block[1])+'</text></g></g>';}
   return s;
 }
 
@@ -858,21 +870,22 @@ var players={};
 /* ---------- crux object on the bench ---------- */
 var cruxObj=document.querySelector('.obj.kl'), cruxG=$('cruxG');
 var cruxU=0, cruxTarget=0, cruxAnim=null;
-var G_OBJ={cx:200,cy:200,R:142};
+var G_OBJ={cx:200,cy:200,R:142}, G1_OBJ={px:128,py:214,R:210}; /* the settled arc inside the object's 400 box */
 function cruxNow(t){ /* the plate ticks under the now-edge: two minutes a step every 1.6 s, glides home after 40 minutes */
   if(REDUCED)return DAY.now; var p=(t||0)/1600, n=Math.floor(p), f=p-n, steps=20;
   var k=n%(steps+1), e=f<.22?eo(f/.22):1;
   var m=k<steps?(k+e)*2:steps*2*(1-eio(f));
   return DAY.now+m/60; }
-function drawCruxObj(t){ cruxG.innerHTML=cruxSVG(cruxU,G_OBJ,null,isDark()?KC.dark:KC.light,{plate:true,now:cruxNow(t)}); }
+function objNow(t){return lerp(cruxNow(t),DAY.now,eo(seg(cruxU,0,.25)));} /* the idle tick settles on 22:20 as the plate turns */
+function drawCruxObj(t){ cruxG.innerHTML=cruxSVG(cruxU,G_OBJ,G1_OBJ,isDark()?KC.dark:KC.light,{plate:true,now:objNow(t)}); }
 function wakeCrux(on){
-  cruxTarget=on?.25:0;
-  if(REDUCED){cruxU=cruxTarget;drawCruxObj();return;}
-  cruxAnim={from:cruxU,to:cruxTarget,start:performance.now(),dur:420};
+  cruxTarget=on?1:0;
+  if(REDUCED)return; /* reduced motion: the rest state */
+  cruxAnim={from:cruxU,to:cruxTarget,start:performance.now(),dur:(on?760:520)*Math.abs(cruxTarget-cruxU)||1};
 }
 var lastCrux=0;
 function tick(t){
-  if(cruxAnim){var k=clamp01((t-cruxAnim.start)/cruxAnim.dur);cruxU=lerp(cruxAnim.from,cruxAnim.to,1-Math.pow(1-k,3));if(k>=1)cruxAnim=null;drawCruxObj(t);lastCrux=t;}
+  if(cruxAnim){var k=clamp01((t-cruxAnim.start)/cruxAnim.dur);cruxU=lerp(cruxAnim.from,cruxAnim.to,k);if(k>=1)cruxAnim=null;drawCruxObj(t);lastCrux=t;}
   else if(!body.classList.contains('dolly')&&!current&&t-lastCrux>33){drawCruxObj(t);lastCrux=t;}
   requestAnimationFrame(tick);
 }
@@ -1148,17 +1161,21 @@ function openCrux(o){
   if(dollying)return;dollying=true;
   if(REDUCED){location.href='crux.html#from-bench';return;}
   var vw=window.innerWidth,vh=window.innerHeight,svg=o.querySelector('svg'),r=svg.getBoundingClientRect(),k=r.width/400;
-  var G0={cx:r.left+G_OBJ.cx*k,cy:r.top+G_OBJ.cy*k,R:G_OBJ.R*k},G1=finalGeom(vw,vh),C=isDark()?KC.dark:KC.light,u0=cruxU;
-  lens.setAttribute('viewBox','0 0 '+vw+' '+vh);lensGround.setAttribute('fill',C.ground);
-  lensG.innerHTML=cruxSVG(u0,G0,G1,C,{plate:true});
+  var G0={cx:r.left+G_OBJ.cx*k,cy:r.top+G_OBJ.cy*k,R:G_OBJ.R*k},G1=finalGeom(vw,Math.max(vh,640)),C=isDark()?KC.dark:KC.light,u0=cruxU,n0=objNow(performance.now());
+  var G1o={px:r.left+G1_OBJ.px*k,py:r.top+G1_OBJ.py*k,R:G1_OBJ.R*k};
+  cruxAnim=null;
+  function G1at(w){return {px:lerp(G1o.px,G1.px,w),py:lerp(G1o.py,G1.py,w),R:Math.exp(lerp(Math.log(G1o.R),Math.log(G1.R),w))};} /* the target slides from the object's own crook to the page's */
+  function nowAt(u){return lerp(n0,DAY.now,eo(seg(u,0,.25)));}
+  lens.setAttribute('viewBox','0 0 '+vw+' '+vh);lensGround.setAttribute('fill',C.ground);lensGround.setAttribute('opacity','0');
+  lensG.innerHTML=cruxSVG(u0,G0,G1o,C,{plate:true,now:n0});
   lens.classList.add('on');o.style.visibility='hidden';body.classList.add('dolly');
   var dir=[Math.cos(rad(DAY.seat)),Math.sin(rad(DAY.seat))],P0=[G0.cx+G0.R*dir[0],G0.cy+G0.R*dir[1]];
   var base=camera.getBoundingClientRect();
-  var dur=1050,t0=performance.now();
+  var dur=1050-480*u0,t0=performance.now();
   (function step(t){
-    var kk=clamp01((t-t0)/dur),u=lerp(u0,1,kk),d=eio(seg(u,.19,1));
-    lensG.innerHTML=cruxSVG(u,G0,G1,C,{plate:true});
-    lensGround.setAttribute('opacity',f2(eio(seg(u,.22,.7))));
+    var kk=clamp01((t-t0)/dur),u=lerp(u0,1,kk),w=eio(kk),d=u0>0?w:eio(seg(u,.19,1));
+    lensG.innerHTML=cruxSVG(u,G0,G1at(u0>0?w:1),C,{plate:true,now:nowAt(u)});
+    lensGround.setAttribute('opacity',f2(u0>0?eio(seg(kk,.1,.6)):eio(seg(u,.22,.7))));
     var s=Math.exp(lerp(0,Math.log(5),d)),sp=[lerp(P0[0],G1.px,d),lerp(P0[1],G1.py,d)];
     if(!phone())setCam(s,sp[0]-s*(P0[0]-base.left)-base.left,sp[1]-s*(P0[1]-base.top)-base.top);
     if(kk<1)requestAnimationFrame(step);

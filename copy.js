@@ -56,6 +56,7 @@ window.COPY = {
 
   /* what plays inside each world (invented content only) */
   worlds: {
+    crux: { date: "FRI 6 NOV" },
     coach: { asks: "So, where would you start?", exhibitLine: "Here's what they pay per keg.", exhibitTitle: "Keg cost per year", bars: ["Lease", "Buy", "Mixed"] },
     drive: { overall: "Overall", topics: ["Data", "Cloud", "Security"], passMark: "Pass mark 80%", passed: "Passed", certificate: "Data and cloud basics, 86%" },
     glossary: {
