@@ -7,6 +7,7 @@
 <meta name="description" content="crux: a focus guard for deep work, on the Mac.">
 <link rel="icon" href="crux-favicon.svg" type="image/svg+xml">
 <script src="copy.js"></script>
+<script src="copy-crux.js"></script>
 <script src="crux-mark.js"></script>
 <script>(function(){var r=document.documentElement; /* Ember or Ivory follows the system only */
 r.classList.add('js');var fb=location.hash==='#from-bench';try{fb=fb||!!sessionStorage.getItem('crux-from-bench');}catch(e){}if(fb)r.classList.add('from-bench');})();</script>
@@ -76,6 +77,9 @@ a{color:inherit}
 .brand .cmk{display:block;flex:none;overflow:visible}
 .lockup .tagline{margin:18px 0 0;font:500 clamp(19px,1.6vw,23px)/1.3 var(--sans);letter-spacing:-.01em}
 .lockup .fact{margin:10px 0 0;display:flex;align-items:center;gap:8px;font-size:14px;color:var(--ink2)}
+.lockup .tagline{max-width:30ch;text-wrap:balance}
+.lockup .who,.lockup .how{margin:8px 0 0;font-size:15.5px;line-height:1.45;color:var(--ink2);max-width:44ch;text-wrap:pretty}
+.lockup .how{color:var(--ink)}
 .task{position:relative;margin-top:clamp(28px,5vh,52px);padding-top:22px;border-top:1px solid var(--hair)}
 .task .meta{display:flex;align-items:center;gap:10px}
 .col .clock{font:500 13px var(--mono);color:var(--ink2)}
@@ -107,7 +111,7 @@ a{color:inherit}
 /* ---------- sections ---------- */
 main section.s{padding:120px max(24px,min(5vw,74px)) 0;max-width:1480px;margin:0 auto}
 h1,h2,h3{text-wrap:balance}
-.s h2{margin:0;font:650 30px/1.1 var(--sans);letter-spacing:-.02em;text-wrap:balance}
+.s h2{margin:0;font:650 30px/1.15 var(--sans);letter-spacing:-.02em;text-wrap:balance;max-width:26ch}
 .s .lede{margin:10px 0 0;color:var(--ink2);font-size:16px;max-width:52ch;text-wrap:pretty}
 .s .head{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-bottom:30px}
 .stage{position:relative;border-radius:10px;overflow:hidden;border:1px solid var(--hair)}
@@ -246,9 +250,10 @@ footer p{margin:0}
   .parts{display:block}
   .hero{height:auto;min-height:0;padding:70px 0 0}
   .col{position:relative;left:auto!important;top:auto;width:auto;margin:0 16px}
-  .lockup{height:140px}
+  .lockup{min-height:140px;padding-bottom:6px}
   .lockup .word{font-size:60px}
   .lockup .tagline{font-size:18px;margin-top:12px}
+  .lockup .who,.lockup .how{font-size:14.5px;margin-top:6px}
   .lockup .fact{margin-top:6px}
   .dialbox{display:block;height:calc(105vw + 6px);margin-top:4px}
   .task{margin-top:0;padding-top:12px}
@@ -279,6 +284,8 @@ footer p{margin:0}
   .lockup .word{font-size:52px}
   .lockup .tagline{font-size:16px;margin-top:8px}
   .lockup .fact{margin-top:4px;font-size:13px}
+  .lockup .who{display:none}
+  .lockup .how{font-size:13px;margin-top:4px}
   .task{margin-top:12px;padding-top:12px}
   .col .title{font-size:20px;margin-top:6px}
   .durs{margin-top:10px}
@@ -303,21 +310,22 @@ footer p{margin:0}
   <a class="plate" href="index.html" id="back" aria-label="Back to Rayane's bench">
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3.5 L5.5 8 L10 12.5"/></svg><span data-copy="site.bench">Bench</span></a>
   <a class="brand" href="#hero" aria-label="crux, top"><svg class="cmk" viewBox="-110 -110 220 220" width="22" height="22" data-crux-mark data-px="22" aria-hidden="true"></svg>crux</a>
-  <nav aria-label="Sections"><a href="#takeover" data-copy="crux.sections.takeover">Takeover</a><a href="#pill" data-copy="crux.sections.pill">Pill</a><a href="#discs" data-copy="crux.sections.discs">Level discs</a><a href="#planner" data-copy="crux.sections.planner">Planner</a></nav>
+  <nav aria-label="Sections"><a href="#planner" data-copy="crux.sections.planner">Planner</a><a href="#takeover" data-copy="crux.sections.takeover">Takeover</a><a href="#pill" data-copy="crux.sections.pill">Pill</a><a href="#discs" data-copy="crux.sections.discs">Level discs</a></nav>
   <div class="parts" id="parts">
     <button class="plate" id="partsBtn" type="button" aria-expanded="false" aria-controls="partsMenu"><span data-copy="crux.sections.menu">Parts</span>
       <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 4.5 6 8l3.5-3.5"/></svg></button>
-    <div class="partsmenu" id="partsMenu" hidden><a href="#takeover" data-copy="crux.sections.takeover">Takeover</a><a href="#pill" data-copy="crux.sections.pill">Pill</a><a href="#discs" data-copy="crux.sections.discs">Level discs</a><a href="#planner" data-copy="crux.sections.planner">Planner</a><a href="#spec" data-copy="crux.sections.spec">Spec</a></div>
+    <div class="partsmenu" id="partsMenu" hidden><a href="#planner" data-copy="crux.sections.planner">Planner</a><a href="#takeover" data-copy="crux.sections.takeover">Takeover</a><a href="#pill" data-copy="crux.sections.pill">Pill</a><a href="#discs" data-copy="crux.sections.discs">Level discs</a><a href="#spec" data-copy="crux.sections.spec">Spec</a></div>
   </div>
 </header>
 
-<section class="hero" id="hero" aria-label="Start a block: the day dial turns, then moves in on the time left">
+<section class="hero" id="hero" aria-label="Start a block: the whole-day ring turns, then moves in on the time left" data-copy-aria="crux.heroAria">
   <svg class="arc" id="heroSvg" aria-hidden="true"><g id="heroG"></g></svg>
   <div class="col" id="col">
     <div class="lockup" id="lockup">
       <h1 class="word"><svg class="cmk" viewBox="-110 -110 220 220" data-crux-mark aria-hidden="true"></svg>crux</h1>
-      <p class="tagline" data-copy="crux.tagline">A focus guard for deep work.</p>
-      <p class="fact"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><rect x="1.5" y="2.5" width="13" height="9" rx="1.5"/><path d="M5.5 14h5M8 11.5V14"/></svg><span data-copy="crux.fact">Mac</span></p>
+      <p class="tagline" data-copy="crux.what">crux is a Mac app that guards one block of deep work at a time.</p>
+      <p class="who" data-copy="crux.who">For students and anyone who plans the day in notes and loses time to open tabs.</p>
+      <p class="how" data-copy="crux.how">Plan the day on a 24-hour dial, press Start, and crux calls you back when you drift.</p>
     </div>
     <div class="dialbox" aria-hidden="true"></div>
     <div class="task">
@@ -349,8 +357,21 @@ footer p{margin:0}
 </section>
 
 <main>
+  <section class="s" id="planner" aria-labelledby="h-pn">
+    <div class="head"><div><h2 id="h-pn" data-copy="crux.titles.planner">You plan the day by dragging tasks onto a 24-hour dial</h2><p class="lede" data-copy="crux.planner.lede">Midnight sits at the top. A task snaps to five minutes, wears its folder's colour and never lands on top of another; ⌘Z takes it back.</p></div></div>
+    <div class="pn">
+      <div class="dialwrap" id="dialWrap"><svg id="pnSvg" viewBox="0 0 600 600" aria-label="Today, the whole day, midnight at the top" data-copy-aria="crux.planner.dialAria"><g id="pnG"></g></svg></div>
+      <div>
+        <div class="benchrow" id="bench" aria-label="Not planned yet" data-copy-aria="crux.planner.notPlanned"></div>
+        <div class="tools"><button class="plate" type="button" id="undo"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3.5 L2 6.5 L5 9.5"/><path d="M2.5 6.5 H10 a3.5 3.5 0 0 1 0 7 H7"/></svg><span data-copy="crux.planner.undo">Undo</span> <kbd>&#8984;Z</kbd></button>
+          <button class="plate" type="button" id="reset" data-copy="crux.planner.reset">Reset</button></div>
+      </div>
+    </div>
+    <svg class="cursor" id="cursor" viewBox="0 0 18 18" aria-hidden="true"><path d="M3 2 L3 15 L6.5 11.5 L9 16.5 L11 15.5 L8.6 10.6 L13.5 10.6 Z" fill="#F4EEE4" stroke="#14110D" stroke-width="1.2" stroke-linejoin="round"/></svg>
+  </section>
+
   <section class="s" id="takeover" aria-labelledby="h-to">
-    <div class="head"><div><h2 id="h-to" data-copy="crux.sections.takeover">Takeover</h2><p class="lede" data-copy="crux.takeover.lede">Drift off task and the page goes grey behind one line.</p></div></div>
+    <div class="head"><div><h2 id="h-to" data-copy="crux.titles.takeover">Open a distracting site mid-block and the screen hands you back your task</h2><p class="lede" data-copy="crux.takeover.lede">The page greys behind one line that names the site, the time lost and the task. Return closes the tab.</p></div></div>
     <div class="stage to on" id="toStage">
       <div class="ghost" aria-hidden="true">
         <div class="bar"><i></i><i></i><i></i><span class="addr"></span></div>
@@ -383,7 +404,7 @@ footer p{margin:0}
   </section>
 
   <section class="s" id="pill" aria-labelledby="h-pl">
-    <div class="head"><div><h2 id="h-pl" data-copy="crux.sections.pill">Pill</h2><p class="lede" data-copy="crux.pill.lede">The block, floating over your work. Drag it, shrink it to a disc, or to a bar that drains.</p></div></div>
+    <div class="head"><div><h2 id="h-pl" data-copy="crux.titles.pill">The time left floats over your work, so you never open the app to check it</h2><p class="lede" data-copy="crux.pill.lede">Drag the block anywhere on screen, or shrink it to a disc or to a bar that drains as the minutes go.</p></div></div>
     <div class="stage pl" id="plStage">
       <div class="shapes" role="group" aria-label="Pill shape" data-copy-aria="crux.pill.shapeGroup">
         <button class="plate glyph" type="button" data-shape="pill" aria-label="Pill" data-copy-aria="crux.pill.shapes.0" aria-pressed="true"><svg width="20" height="12" viewBox="0 0 20 12"><rect x="1" y="2" width="18" height="8" rx="4" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></button>
@@ -400,7 +421,7 @@ footer p{margin:0}
   </section>
 
   <section class="s" id="discs" aria-labelledby="h-lv">
-    <div class="head"><div><h2 id="h-lv" data-copy="crux.sections.discs">Level discs</h2><p class="lede" data-copy="crux.discs.lede">One mark at every size. The filled area is the share of the block you spent on task.</p></div></div>
+    <div class="head"><div><h2 id="h-lv" data-copy="crux.titles.discs">Every block leaves a disc filled to the share you spent on task</h2><p class="lede" data-copy="crux.discs.lede">The same mark runs from 11 pt in the menu bar to 64 pt in the popover. Drag the waterline to try it.</p></div></div>
     <div class="lv">
       <div>
         <div class="big" id="big" role="slider" tabindex="0" aria-label="Share on task" data-copy-aria="crux.discs.slider" aria-valuemin="0" aria-valuemax="100" aria-valuenow="62"><svg id="bigSvg" viewBox="-110 -110 220 220"></svg></div>
@@ -413,21 +434,8 @@ footer p{margin:0}
     </div>
   </section>
 
-  <section class="s" id="planner" aria-labelledby="h-pn">
-    <div class="head"><div><h2 id="h-pn" data-copy="crux.sections.planner">Planner</h2><p class="lede" data-copy="crux.planner.lede">Drag a task onto the day. It snaps to five minutes and never lands on top of another.</p></div></div>
-    <div class="pn">
-      <div class="dialwrap" id="dialWrap"><svg id="pnSvg" viewBox="0 0 600 600" aria-label="Today, 12:00 to midnight"><g id="pnG"></g></svg></div>
-      <div>
-        <div class="benchrow" id="bench" aria-label="Not planned yet" data-copy-aria="crux.planner.notPlanned"></div>
-        <div class="tools"><button class="plate" type="button" id="undo"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3.5 L2 6.5 L5 9.5"/><path d="M2.5 6.5 H10 a3.5 3.5 0 0 1 0 7 H7"/></svg><span data-copy="crux.planner.undo">Undo</span> <kbd>&#8984;Z</kbd></button>
-          <button class="plate" type="button" id="reset" data-copy="crux.planner.reset">Reset</button></div>
-      </div>
-    </div>
-    <svg class="cursor" id="cursor" viewBox="0 0 18 18" aria-hidden="true"><path d="M3 2 L3 15 L6.5 11.5 L9 16.5 L11 15.5 L8.6 10.6 L13.5 10.6 Z" fill="#F4EEE4" stroke="#14110D" stroke-width="1.2" stroke-linejoin="round"/></svg>
-  </section>
-
   <section class="s" id="spec" aria-labelledby="h-sp">
-    <div class="head"><div><h2 id="h-sp" data-copy="crux.sections.spec">Spec</h2></div></div>
+    <div class="head"><div><h2 id="h-sp" data-copy="crux.titles.spec">It runs on the Mac and works from the task list you already keep</h2><p class="lede" data-copy="crux.specLede">Tasks stay plain lines in your own notes, so nothing is locked inside the app.</p></div></div>
     <div class="spec">
       <figure><div class="pic" aria-hidden="true"><div class="mb"><span>Fri 22:20</span><span class="dot" data-disc=".7" data-size="11" data-kind="mark"></span></div><span data-disc=".7" data-size="44" data-kind="mark" style="margin-top:18px"></span></div>
         <figcaption><b data-copy="crux.spec.0.title">On the Mac</b><span data-copy="crux.spec.0.text">Menu bar, floating pill, full-screen takeover.</span></figcaption></figure>
@@ -467,7 +475,8 @@ function isDark(){return DARKQ.matches;}
 var KC={dark:{ground:'#14110D',plate:'#1C1813',track:'#2A2219',spent:'#55483A',hair:'#2E261D',ink3:'#776C5E',ink2:'#ABA091',ink:'#F4EEE4',hi:'#E3763F',dim:'#7B3A21',edge:'#FFFFFF'},
         light:{ground:'#F4EFE6',plate:'#FFFCF6',track:'#E8DFCE',spent:'#C9BAA1',hair:'#DCD2C2',ink3:'#9A8E79',ink2:'#6E6453',ink:'#211C15',hi:'#C4551F',dim:'#D8C6AC',edge:'#211C15'}};
 var DAY={now:22+7/60,block:[22+7/60,22+52/60],done:[[19,19+40/60,.91],[20+10/60,21,.62],[21+15/60,21+45/60,.38]],next:[23,23.5],seat:172};
-var SEAT0=((DAY.now%12)*30)-90;
+var FACE=24, DPH0=360/FACE; /* the whole day on the ring: 15 degrees an hour, midnight at the top */
+var SEAT0=(DAY.now%FACE)*DPH0-90;
 function rad(a){return a*Math.PI/180;}
 function pt(cx,cy,r,a){return [cx+r*Math.cos(rad(a)),cy+r*Math.sin(rad(a))];}
 function f2(n){return Math.round(n*100)/100;}
@@ -501,21 +510,21 @@ function minOff(str){
   return x;
 }
 /* the settled arc: the same function sits in index.html, so the bench's dolly lands on this exact frame */
-function finalGeom(vw,vh){
+function finalGeom(vw,vh,top){
   if(vw>=820){var W=Math.min(vw,1480),off=(vw-W)/2,R=Math.min(.5*vh,.5*W);return {px:off+.62*W,py:.6*vh,R:R};}
-  var R2=.6*vw;return {px:.30*vw,py:214+1.05*R2,R:R2};
+  var R2=.6*vw;return {px:.30*vw,py:(top==null?214:top)+1.05*R2,R:R2};
 }
 function cruxSVG(u,G0,G1,C,opt){
   opt=opt||{};
   var now=opt.now||DAY.now;
-  var turn=eo(seg(u,0,.25)), furn=1-seg(u,.14,.29), d=eio(seg(u,.19,1)), cut=eio(seg(u,.42,1));
+  var turn=eo(seg(u,0,.25)), furn=1-seg(u,.14,.29), hubA=1-seg(u,.07,.145), d=eio(seg(u,.19,1)), cut=eio(seg(u,.42,1));
   var seat=lerp(SEAT0,DAY.seat,turn);
   var R=G1?Math.exp(lerp(Math.log(G0.R),Math.log(G1.R),d)):G0.R;
   var dir=[Math.cos(rad(DAY.seat)),Math.sin(rad(DAY.seat))];
   var p0=[G0.cx+G0.R*dir[0],G0.cy+G0.R*dir[1]];
   var p=G1?[lerp(p0[0],G1.px,d),lerp(p0[1],G1.py,d)]:p0;
   var cx=p[0]-R*dir[0], cy=p[1]-R*dir[1];
-  var W=R*lerp(.245,.142,d), dph=lerp(30,74.7,d);
+  var W=R*lerp(.245,.142,d), dph=lerp(DPH0,74.7,d);
   var before=lerp(180,42,cut), after=lerp(180,62,cut), lo=seat-before, hi=seat+after;
   function A(t){return seat+(t-now)*dph;}
   function arc(t0,t1,r1,r2,fill,op){var a0=Math.max(A(t0),lo),a1=Math.min(A(t1),hi);if(a1-a0<.05)return '';return '<path d="'+sector(cx,cy,r1,r2,a0,a1)+'" fill="'+fill+'"'+(op!=null&&op<1?' opacity="'+f2(op)+'"':'')+'/>';}
@@ -534,14 +543,14 @@ function cruxSVG(u,G0,G1,C,opt){
   s+=arc(DAY.block[0],now,r1,r2,C.dim);
   s+=arc(now,DAY.block[1],r1,r2,C.hi);
   if(furn>0){var fsz=R*.075;s+='<g font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="'+f2(fsz)+'" fill="'+C.ink3+'" text-anchor="middle" opacity="'+f2(furn)+'">';
-    for(var h=14;h<=24;h+=2){var q=pt(cx,cy,r1-R*.12,A(h));s+='<text x="'+f2(q[0])+'" y="'+f2(q[1]+fsz*.35)+'">'+(h===24?'00':h)+'</text>';}
-    s+='</g>';
-    s+='<g opacity="'+f2(furn)+'" text-anchor="middle"><text x="'+f2(cx)+'" y="'+f2(cy-R*.17)+'" font-family="-apple-system,BlinkMacSystemFont,Helvetica,sans-serif" font-weight="600" font-size="'+f2(R*.065)+'" letter-spacing="'+f2(R*.008)+'" fill="'+C.ink3+'">'+K.date+'</text>'+
+    for(var h=0;h<FACE;h+=3){var hw=h;while(hw<now-FACE/2)hw+=FACE;while(hw>now+FACE/2)hw-=FACE;var q=pt(cx,cy,r1-R*.12,A(hw));s+='<text x="'+f2(q[0])+'" y="'+f2(q[1]+fsz*.35)+'">'+h+'</text>';}
+    s+='</g>';}
+  if(hubA>0){s+='<g opacity="'+f2(hubA)+'" text-anchor="middle"><text x="'+f2(cx)+'" y="'+f2(cy-R*.17)+'" font-family="-apple-system,BlinkMacSystemFont,Helvetica,sans-serif" font-weight="600" font-size="'+f2(R*.065)+'" letter-spacing="'+f2(R*.008)+'" fill="'+C.ink3+'">'+K.date+'</text>'+
       '<text x="'+f2(cx)+'" y="'+f2(cy+R*.13)+'" font-family="ui-rounded,\'SF Pro Rounded\',Nunito,-apple-system,sans-serif" font-weight="900" font-size="'+f2(R*.26)+'" letter-spacing="'+f2(-R*.008)+'" fill="'+C.ink+'">2<tspan font-size="'+f2(R*.1)+'" dx="'+f2(R*.02)+'">h</tspan><tspan dx="'+f2(R*.05)+'">15</tspan><tspan font-size="'+f2(R*.1)+'" dx="'+f2(R*.02)+'">m</tspan></text></g>';}
   var e0=pt(cx,cy,r1-R*.06,seat),e1=pt(cx,cy,r2+R*.05,seat);
   s+='<line x1="'+f2(e0[0])+'" y1="'+f2(e0[1])+'" x2="'+f2(e1[0])+'" y2="'+f2(e1[1])+'" stroke="'+C.edge+'" stroke-width="'+f2(Math.max(1.2,R*.0045))+'" stroke-linecap="round"/>';
-  var ca=opt.countA!=null?opt.countA:seg(u,.55,.92);
-  if(ca>0){var cs=R*.23,ip=pt(cx,cy,r1-R*.07,seat),bx=ip[0],by=ip[1]+cs*.72;
+  var ca=opt.countA!=null?opt.countA:seg(u,.55,.92), la_=seg(u,.55,.92); /* the count stays on screen through the motion; the clocks and the mark arrive with the arc */
+  if(ca>0){var cs=R*lerp(.3,.23,d),ip=pt(cx,cy,r1-R*.07,seat),bx=ip[0],by=ip[1]+cs*.72;
     var CF='font-family="ui-rounded,\'SF Pro Rounded\',Nunito,-apple-system,sans-serif" font-weight="900" font-size="'+f2(cs)+'" letter-spacing="'+f2(-cs*.035)+'" fill="'+C.ink+'"';
     if(opt.roll){ /* the count rolls: the old number leaves upward, the new one rises into the crook; "min" stays put */
       var off=minOff(String(opt.count))*cs/100,k=opt.roll.k,dy=cs*.86;
@@ -550,6 +559,7 @@ function cruxSVG(u,G0,G1,C,opt){
         '<text x="'+f2(bx+off)+'" y="'+f2(by)+'" font-family="-apple-system,BlinkMacSystemFont,Helvetica,sans-serif" font-weight="500" font-size="'+f2(cs*.15)+'" fill="'+C.ink2+'">min</text>';
     }else
     s+='<g opacity="'+f2(ca)+'"><text x="'+f2(bx)+'" y="'+f2(by)+'" '+CF+'>'+(opt.count||32)+'<tspan font-family="-apple-system,BlinkMacSystemFont,Helvetica,sans-serif" font-weight="500" font-size="'+f2(cs*.15)+'" dx="'+f2(cs*.08)+'" fill="'+C.ink2+'" letter-spacing="0">min</tspan></text>';
+    s+='</g><g opacity="'+f2(Math.min(ca,la_))+'">';
     s+=disc(bx+cs*.12,by+cs*.42,cs*.075,.7,C.ink2,C.hi,cs*.012);
     if(opt.stalled)s+='<text x="'+f2(bx+cs*.28)+'" y="'+f2(by+cs*.47)+'" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="'+f2(Math.max(10,cs*.13))+'" fill="'+C.ink3+'">'+opt.stalled+'</text>';
     var la=pt(cx,cy,r2+R*.06,A(DAY.block[0])),lb=pt(cx,cy,r2+R*.06,A(DAY.block[1])),lf=Math.max(10,R*.026);
@@ -581,16 +591,17 @@ function vw(){return window.innerWidth;}
 function hh(){return hero.clientHeight;}
 function narrow(){return vw()<820;}
 function heroFrame(w){var W=Math.min(w,1480);return {W:W,off:(w-W)/2};}
-function G0(){var w=vw(),h=hh();if(!narrow()){var F=heroFrame(w);return {cx:F.off+.70*F.W,cy:.53*h,R:.27*Math.min(h,.62*F.W)};}return {cx:.5*w,cy:214+(1.05*w+6)/2,R:.3*w};}
+function heroTop(){var d=document.querySelector('.dialbox');return d&&narrow()?col.offsetTop+d.offsetTop:214;} /* the dial follows the three first-screen sentences */
+function G0(){var w=vw(),h=hh();if(!narrow()){var F=heroFrame(w);return {cx:F.off+.70*F.W,cy:.53*h,R:.27*Math.min(h,.62*F.W)};}return {cx:.5*w,cy:heroTop()+(1.05*w+6)/2,R:.3*w};}
 function short(){return !narrow()&&window.innerHeight<520;} /* a phone held sideways: the hero fits the screen */
-function G1(){if(short()){var F=heroFrame(vw()),h=hh();return {px:F.off+.62*F.W,py:.62*h,R:.44*h};}return finalGeom(vw(),narrow()?window.innerHeight:Math.max(window.innerHeight,640));}
+function G1(){if(short()){var F=heroFrame(vw()),h=hh();return {px:F.off+.62*F.W,py:.62*h,R:.44*h};}return finalGeom(vw(),narrow()?window.innerHeight:Math.max(window.innerHeight,640),heroTop());}
 function placeCol(){if(narrow()){col.style.left='';return;}var F=heroFrame(vw());col.style.left=f2(F.off+Math.max(24,.05*F.W))+'px';}
 function count(){return Math.max(1,Math.ceil((START0+S.len/60-S.now)*60-1e-6));}
 function renderHero(){
   var w=vw(),h=hh();heroSvg.setAttribute('viewBox','0 0 '+w+' '+h);
   DAY.block=[START0,START0+S.len/60*S.sweep];
   var rk=roll?eo(clamp01((performance.now()-roll.t0)/300)):1;
-  heroG.innerHTML=cruxSVG(U,G0(),G1(),themeC(false),{now:S.now,count:count(),roll:roll&&rk<1?{from:roll.from,k:rk}:null});
+  heroG.innerHTML=cruxSVG(U,G0(),G1(),themeC(false),{now:S.now,count:count(),countA:S.started?eo(S.sweep):0,roll:roll&&rk<1?{from:roll.from,k:rk}:null});
 }
 function clockHTML(a,b){return hm(a).replace(':','<b>:</b>')+' &rarr; '+hm(b).replace(':','<b>:</b>');}
 function setLen(m){
@@ -781,19 +792,21 @@ var START_BENCH=K.planner.bench.map(function(b,i){return {id:'b'+i,title:b.title
 var planned,benchItems,undoStack=[],ghost=null,settle=null,pnTouched=false;
 function clone(a){return a.map(function(x){return Object.assign({},x);});}
 function pnReset(){planned=clone(START_PLANNED);benchItems=clone(START_BENCH);undoStack=[];ghost=null;renderPlanner();renderBench();}
-function ang(t){return (t-12)*30-90;}
+function ang(t){return t*15-90;} /* 24-hour face, as Today since 8 Nov */
 function hm(t){var h=Math.floor(t+1e-6),m=Math.round((t-h)*60);if(m===60){h++;m=0;}h=h%24;return (h<10?'0':'')+h+':'+(m<10?'0':'')+m;}
 function renderPlanner(){
   var C=themeC(false),cx=PN.cx,cy=PN.cy,R=PN.R,W=PN.W,r1=R-W/2,r2=R+W/2,s='';
   s+='<circle cx="'+cx+'" cy="'+cy+'" r="'+(r2+26)+'" fill="'+C.plate+'" stroke="'+C.hair+'"/>';
   s+='<path d="'+sector(cx,cy,r1,r2,-90,270)+'" fill="'+C.track+'" fill-rule="evenodd"/>';
   /* past part of the day, quieter */
-  s+='<path d="'+sector(cx,cy,r1,r2,ang(12),ang(PN.now))+'" fill="'+C.ground+'" opacity=".55"/>';
+  s+='<path d="'+sector(cx,cy,r1,r2,ang(0),ang(PN.now))+'" fill="'+C.ground+'" opacity=".55"/>';
+  /* the morning's finished blocks: spent, each with its level disc; not draggable */
+  (K.planner.done||[]).forEach(function(b){s+='<path d="'+sector(cx,cy,r1+3,r2-3,ang(b.from)+.6,ang(b.to)-.6)+'" fill="'+C.spent+'"/>';var m=pt(cx,cy,R,ang((b.from+b.to)/2));s+=disc(m[0],m[1],8.5,b.level,C.ink,C.ink,1.6);});
   /* five-minute ticks near the ghost */
-  for(var m=0;m<144;m++){var a=-90+m*2.5,t=12+m/12,lit=ghost&&t>=ghost.t0-.001&&t<=ghost.t1+.001,maj=m%12===0;
+  for(var m=0;m<288;m++){var a=-90+m*1.25,t=m/12,lit=ghost&&t>=ghost.t0-.001&&t<=ghost.t1+.001,maj=m%12===0;
     if(!maj&&!lit)continue;var p0=pt(cx,cy,r2+3,a),p1=pt(cx,cy,r2+(maj?11:7),a);
     s+='<line x1="'+f2(p0[0])+'" y1="'+f2(p0[1])+'" x2="'+f2(p1[0])+'" y2="'+f2(p1[1])+'" stroke="'+(lit?C.ink:C.ink3)+'" stroke-width="'+(maj?1.4:1.2)+'"/>';}
-  for(var h=12;h<24;h++){var q=pt(cx,cy,r1-20,ang(h));s+='<text x="'+f2(q[0])+'" y="'+f2(q[1]+4.5)+'" text-anchor="middle" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="12.5" fill="'+C.ink3+'">'+h+'</text>';}
+  for(var h=0;h<24;h+=3){var q=pt(cx,cy,r1-20,ang(h));s+='<text x="'+f2(q[0])+'" y="'+f2(q[1]+4.5)+'" text-anchor="middle" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="12.5" fill="'+C.ink3+'">'+h+'</text>';}
   planned.forEach(function(p){
     s+='<g class="pa" tabindex="0" role="button" data-id="'+p.id+'" aria-label="'+p.title+', '+hm(p.t0)+' to '+hm(p.t1)+'. Delete to unplan." style="cursor:grab">'+
       '<path d="'+sector(cx,cy,r1+3,r2-3,ang(p.t0)+.6,ang(p.t1)-.6)+'" fill="'+p.tint+'"/></g>';});
@@ -854,7 +867,7 @@ document.addEventListener('keydown',function(e){if((e.metaKey||e.ctrlKey)&&!e.sh
 document.getElementById('pnG').addEventListener('keydown',function(e){var g=e.target.closest('.pa');if(g&&(e.key==='Delete'||e.key==='Backspace')){pnTouched=true;unplan(g.dataset.id);}});
 function svgPoint(x,y){var r=document.getElementById('pnSvg').getBoundingClientRect();return [(x-r.left)/r.width*600,(y-r.top)/r.height*600];}
 function timeAt(x,y,alt){var p=svgPoint(x,y),dx=p[0]-PN.cx,dy=p[1]-PN.cy,d=Math.sqrt(dx*dx+dy*dy);if(Math.abs(d-PN.R)>PN.W*1.1)return null;
-  var a=Math.atan2(dy,dx)*180/Math.PI+90;if(a<0)a+=360;var t=12+a/30,g=alt?60:12;return Math.round(t*g)/g;}
+  var a=Math.atan2(dy,dx)*180/Math.PI+90;if(a<0)a+=360;var t=a/15,g=alt?60:12;return Math.round(t*g)/g;}
 function startDrag(b,el,x,y,pid){
   var r=el.getBoundingClientRect(),offX=x-r.left,offY=y-r.top,slot=document.createElement('div');
   slot.className='slotbox';slot.style.width=r.width+'px';slot.style.height=r.height+'px';

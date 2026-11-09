@@ -1,0 +1,752 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>Moat</title>
+<meta name="description" content="Moat: an iPhone app that closes the apps you lose time to, and makes getting back in cost a small effort you chose.">
+<link rel="icon" href="moat-favicon.svg" type="image/svg+xml">
+<script src="copy.js"></script>
+<script src="copy-moat.js"></script>
+<script>(function(){var r=document.documentElement;r.classList.add('js');try{if(matchMedia('(prefers-reduced-motion: reduce)').matches)r.classList.add('rm');}catch(e){}})();</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@800;900&display=swap" rel="stylesheet">
+<style>
+/* Moat's own Lake palette (Shared/Palette.swift: Ice lake light, North Sea dark), the same tokens as the home's Moat world.
+   Water is the state; the keep is the block; the drawbridge is the way back in. */
+:root{
+  color-scheme:light dark;
+  --g:#F4FAFC;--mist:#DDEFF5;--water:#1C9CC4;--deep:#0B4A60;--i:#0B3442;--i2:#4D717E;--acc:#C33226;--foam:#FFFFFF;--onw:#04232E;
+  --card:#FFFFFF;--line:#C9E2EB;--frame:#0A1419;--frame-edge:#0A1419;
+  --sys:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Helvetica,Arial,sans-serif;
+  --round:ui-rounded,"SF Pro Rounded","Nunito",system-ui,sans-serif;
+  --out:cubic-bezier(.23,1,.32,1);
+  --expo:cubic-bezier(.16,1,.3,1);
+  --spring:cubic-bezier(.34,1.45,.5,1);
+  --gut:32px;
+}
+@media (prefers-color-scheme:dark){:root{
+  --g:#0D161D;--mist:#1A2A36;--water:#5E9BC4;--deep:#24668F;--i:#E2EDF4;--i2:#7F97A8;--acc:#F07F52;--foam:#DCEBF3;--onw:#0D161D;
+  --card:#14212B;--line:#24394A;--frame:#05090C;--frame-edge:#2A3D4C;
+}}
+@media (max-width:759px){:root{--gut:16px}}
+*{box-sizing:border-box}
+html{background:var(--g);-webkit-text-size-adjust:100%}
+@media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
+body{margin:0;background:var(--g);color:var(--i);font:400 17px/1.5 var(--sys);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+::selection{background:color-mix(in oklab,var(--water) 30%,transparent)}
+:focus{outline:none}
+:focus-visible{outline:2px solid var(--water);outline-offset:3px}
+a{color:inherit}
+h1,h2,p{margin:0}
+[hidden]{display:none!important}
+.wrap{max-width:calc(1224px + 2 * var(--gut));margin:0 auto;padding:0 var(--gut)}
+
+/* controls: radius 12 like the app's cards; never a capsule */
+.btn{appearance:none;display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:40px;padding:0 16px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--i);font:500 15px/1 var(--sys);text-decoration:none;cursor:pointer;white-space:nowrap;
+  transition:border-color .16s,background-color .16s,transform .12s ease-out}
+@media (hover:hover) and (pointer:fine){.btn:hover{border-color:var(--water)}}
+.btn:active{transform:scale(.97)}
+.btn.small{min-height:36px;padding:0 12px;font-size:14px}
+
+/* top bar */
+.top{position:absolute;left:0;right:0;top:0;z-index:5}
+.top .wrap{display:flex;align-items:center;gap:16px;min-height:72px}
+.top nav{margin-left:auto;display:flex;gap:4px}
+.top nav a{color:var(--i2);font-size:14px;min-height:36px;display:inline-flex;align-items:center;padding:0 12px;border-radius:12px;text-decoration:none;transition:color .12s,background-color .12s}
+@media (hover:hover) and (pointer:fine){.top nav a:hover{color:var(--i);background:var(--mist)}}
+@media (max-width:759px){.top nav{display:none}}
+
+/* hero: the phone stands in the moat */
+.hero{position:relative;min-height:100svh;display:flex;flex-direction:column;justify-content:flex-end;overflow:hidden;padding:96px 0 0}
+.hero .wrap{position:relative;z-index:2;display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:32px;align-items:center;width:100%}
+.lockup{grid-column:1/7;padding-bottom:120px}
+h1{display:flex;align-items:center;gap:18px;font:800 clamp(60px,7.4vw,112px)/.95 var(--round);letter-spacing:-.03em}
+h1 .mk{width:.78em;height:.78em;flex:none}
+.tagline{margin-top:16px;font:600 clamp(22px,2.2vw,30px)/1.2 var(--sys);letter-spacing:-.01em;color:var(--water)}
+.facts{margin:36px 0 0;padding:0;list-style:none;display:grid;gap:14px;max-width:520px}
+.facts li{display:grid;grid-template-columns:44px minmax(0,1fr);gap:12px;align-items:start}
+.facts .lb{font:600 13px/24px var(--sys);color:var(--i2);text-transform:none}
+.facts .tx{font-size:18px;line-height:1.4}
+.hstage{grid-column:7/13;display:flex;justify-content:center;align-self:end;position:relative}
+.hstage{padding-bottom:22px}
+.lake{position:absolute;left:0;right:0;bottom:0;height:128px;z-index:3;pointer-events:none;overflow:hidden}
+.lake svg{position:absolute;left:0;bottom:0;width:200%;height:100%}
+.lake .wv1{fill:var(--water);opacity:.42;animation:wave 9s linear infinite}
+.lake .wv2{fill:var(--water);animation:wave 6.5s linear infinite reverse}
+@keyframes wave{to{transform:translateX(-50%)}}
+@media (max-width:899px){
+  .hero{min-height:0;padding-top:88px}
+  .hero .wrap{grid-template-columns:1fr;gap:28px}
+  .lockup,.hstage{grid-column:1}
+  .lockup{padding-bottom:0}
+  .hstage{padding-top:8px}
+}
+
+/* the phone: a faithful replica of the app's screens (390 x 844 points) */
+.phone{position:relative;width:clamp(248px,23vw,318px);padding:9px;border-radius:52px;background:var(--frame);box-shadow:0 0 0 1px var(--frame-edge),0 30px 60px -24px rgba(4,35,46,.45);flex:none}
+.phone > svg{display:block;width:100%;height:auto;border-radius:43px;background:var(--g)}
+.scr text{font-family:var(--sys);fill:var(--i)}
+.scr .mu{fill:var(--i2)}
+.scr .ow{fill:var(--onw)}
+.scr .w{fill:var(--water)}
+.scr .m{fill:var(--mist)}
+.scr .c{fill:var(--card)}
+.scr .gr{fill:var(--g)}
+.scr .ink{fill:var(--i)}
+.crest{transform-origin:195px 250px;animation:spin 30s linear infinite}
+.crest.b{animation-duration:22s;animation-direction:reverse}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* scenes */
+.scene{position:relative;padding:120px 0 40px}
+.scene .seam{position:absolute;left:0;right:0;top:0;width:100%;height:24px;display:block}
+.scene .seam path{fill:none;stroke:var(--water);stroke-width:1.5;opacity:.45;vector-effect:non-scaling-stroke}
+.scene .wrap{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:32px;align-items:center}
+.copy{grid-column:1/6}
+.stage{grid-column:6/13;display:flex;justify-content:center;align-items:center;gap:40px;flex-wrap:wrap}
+h2{font:600 clamp(28px,3.1vw,44px)/1.12 var(--sys);letter-spacing:-.02em;max-width:18ch;text-wrap:balance}
+.sub{margin-top:18px;color:var(--i2);font-size:18px;line-height:1.5;max-width:44ch}
+.hint{margin-top:24px;display:flex;align-items:center;gap:10px;color:var(--water);font-weight:600;font-size:15px}
+.hint svg{flex:none}
+@media (max-width:899px){
+  .scene{padding:88px 0 24px}
+  .scene .wrap{grid-template-columns:1fr;gap:36px}
+  .copy,.stage{grid-column:1}
+}
+
+/* scene 1: editor (cards toggle) */
+.tap{cursor:pointer}
+.tap .bx{transition:fill .2s var(--out),stroke .2s var(--out)}
+.tap[aria-pressed="true"] .bx{fill:var(--g);stroke:var(--water);stroke-width:2.4}
+.tap[aria-pressed="false"] .bx{fill:var(--card);stroke:transparent}
+.tap:focus-visible .bx{stroke:var(--i);stroke-width:2.4}
+.seg{cursor:pointer}
+.seg .bx{transition:fill .2s var(--out)}
+.seg[aria-pressed="true"] .bx{fill:var(--water)}
+.seg[aria-pressed="false"] .bx{fill:var(--card)}
+.seg[aria-pressed="true"] text{fill:var(--onw)}
+
+/* scene 2: home screen, a tap, the shield rises */
+#shield{transition:transform .52s var(--expo)}
+.urge[data-s="home"] #shield,.urge[data-s="tap"] #shield{transform:translateY(844px)}
+#thumb{opacity:0;transition:opacity .2s}
+.urge[data-s="tap"] #thumb{opacity:1}
+.urge[data-s="tap"] #thumb circle{animation:press .5s var(--out) both}
+@keyframes press{0%{transform:scale(1.5);opacity:0}60%{opacity:.9}100%{transform:scale(1);opacity:.75}}
+#thumb circle{transform-box:fill-box;transform-origin:50% 50%}
+
+/* scene 3: the toll; the keep beside it */
+.cross .stage{gap:28px 48px}
+#holdBtn{cursor:pointer;touch-action:none;-webkit-user-select:none;user-select:none}
+#holdBtn .core{transform-box:fill-box;transform-origin:50% 50%;transition:transform .2s var(--out)}
+#holdBtn.down .core{transform:scale(.95)}
+#holdRing{transition:stroke-dashoffset .3s var(--out)}
+#holdBtn:focus-visible #holdFocus{opacity:1}
+.cross:not([data-s="toll"]) [data-v="toll"],.cross:not([data-s="open"]) [data-v="open"],.cross:not([data-s="stay"]) [data-v="stay"]{display:none}
+.cross [data-v]{animation:vin .32s var(--out)}
+@keyframes vin{from{opacity:.2}to{opacity:1}}
+.keepbox{display:flex;flex-direction:column;align-items:center;gap:16px;width:clamp(220px,22vw,280px)}
+.keep{width:100%;height:auto;display:block;overflow:visible}
+.keep .bridge{transform-box:fill-box;transform-origin:50% 0;transform:scaleY(.05);transition:transform .3s ease-out}
+.cross[data-s="open"] .keep .bridge{transform:scaleY(1);transition:transform .8s var(--spring)}
+.keep .opening{opacity:0;transition:opacity .4s}
+.cross[data-s="open"] .keep .opening{opacity:1}
+.keep .walker{opacity:0}
+.cross[data-s="open"] .keep .walker{animation:walk 1.9s linear .7s both}
+.cross[data-s="open"] .keep .walker.b{animation-delay:1.15s}
+@keyframes walk{0%{opacity:0;transform:translateY(0)}12%{opacity:1}85%{opacity:1}100%{opacity:0;transform:translateY(-66px)}}
+.keep .ripple{transform-origin:0 0;opacity:0;animation:ripple 3.8s var(--out) infinite}
+.keep .ripple.b{animation-delay:1.9s}
+@keyframes ripple{0%{transform:scale(.92);opacity:0}12%{opacity:.75}100%{transform:scale(1.3);opacity:0}}
+.keep .drop{opacity:0}
+.cross[data-s="stay"] .keep .drop{animation:drop 1.1s cubic-bezier(.45,0,.7,1) both}
+.cross[data-s="stay"] .keep .splash ellipse{animation:splash .9s var(--out) .62s both}
+.cross[data-s="stay"] .keep .splash ellipse.b{animation-delay:.74s}
+.keep .splash ellipse{opacity:0;transform-box:fill-box;transform-origin:50% 50%}
+@keyframes drop{0%{opacity:0;transform:translate(120px,-150px) rotate(-40deg)}10%{opacity:1}55%{opacity:1;transform:translate(0,0) rotate(0)}62%{opacity:0;transform:translate(0,4px) scale(1,.4)}100%{opacity:0;transform:translate(0,4px) scale(1,.4)}}
+@keyframes splash{0%{opacity:.9;transform:scale(.3)}100%{opacity:0;transform:scale(1.6)}}
+.status{min-height:24px;font-size:15px;color:var(--i2);text-align:center}
+.again{display:none!important}
+.cross:not([data-s="toll"]) .again{display:inline-flex!important}
+
+/* scene 4: insights bars grow */
+.bar{transform-box:fill-box;transform-origin:50% 100%;transform:scaleY(0);transition:transform .9s var(--expo)}
+.ins.in .bar{transform:scaleY(1)}
+.ins.in .bar.u{transition-delay:.12s}
+
+/* foot: back into the water */
+footer{position:relative;margin-top:96px;padding-top:56px}
+footer .lake{position:absolute;top:0;bottom:auto;height:64px;z-index:0}
+.foot{position:relative;display:flex;align-items:center;gap:12px 24px;flex-wrap:wrap;padding-top:32px;padding-bottom:48px;color:var(--i2);font-size:14px}
+.foot p:last-child{margin-left:auto}
+@media (max-width:759px){.foot p:last-child{margin-left:0}}
+
+/* entrance: the lockup rises, the phone lifts out of the water */
+@media (prefers-reduced-motion:no-preference){
+  .js .lockup > *{animation:rise .52s var(--expo) both}
+  .js .lockup > :nth-child(2){animation-delay:.08s}
+  .js .lockup > :nth-child(3){animation-delay:.16s}
+  .js .hstage .phone{animation:lift .9s var(--expo) .12s both}
+}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes lift{from{opacity:0;transform:translateY(60px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+  .bar{transform:scaleY(1)}
+}
+</style>
+</head>
+<body>
+<!-- shared glyphs: generic app icons (no brand marks) and the app's own symbols -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="gl-clip" viewBox="0 0 40 40"><rect width="40" height="40" rx="9" fill="#E2553F"/><path d="M15 12.5v15l12-7.5z" fill="#fff"/></symbol>
+    <symbol id="gl-feed" viewBox="0 0 40 40"><rect width="40" height="40" rx="9" fill="#6B57D8"/><rect x="10" y="10" width="20" height="9" rx="2.5" fill="#fff"/><rect x="10" y="22" width="20" height="3" rx="1.5" fill="#fff" opacity=".8"/><rect x="10" y="27.5" width="13" height="3" rx="1.5" fill="#fff" opacity=".8"/></symbol>
+    <symbol id="gl-chat" viewBox="0 0 40 40"><rect width="40" height="40" rx="9" fill="#2E9E6A"/><path d="M11 13h18a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-9l-5 4v-4h-4a2 2 0 0 1-2-2v-9a2 2 0 0 1 2-2z" fill="#fff"/></symbol>
+    <symbol id="gl-game" viewBox="0 0 40 40"><rect width="40" height="40" rx="9" fill="#E59A2E"/><rect x="8" y="14" width="24" height="13" rx="6.5" fill="#fff"/><path d="M14 18v5M11.5 20.5h5" stroke="#E59A2E" stroke-width="2" stroke-linecap="round"/><circle cx="25" cy="19" r="1.6" fill="#E59A2E"/><circle cx="27.5" cy="22.5" r="1.6" fill="#E59A2E"/></symbol>
+    <symbol id="gl-cam" viewBox="0 0 40 40"><rect width="40" height="40" rx="9" fill="#36495A"/><rect x="9" y="14" width="22" height="15" rx="3.5" fill="#fff"/><rect x="15" y="11" width="10" height="5" rx="1.5" fill="#fff"/><circle cx="20" cy="21.5" r="4.4" fill="#36495A"/></symbol>
+    <symbol id="gl-shop" viewBox="0 0 40 40"><rect width="40" height="40" rx="9" fill="#3C7BD9"/><path d="M11 16h18l-1.6 13.5H12.6z" fill="#fff"/><path d="M15.5 16v-2a4.5 4.5 0 0 1 9 0v2" fill="none" stroke="#fff" stroke-width="2"/></symbol>
+    <symbol id="gl-news" viewBox="0 0 40 40"><rect width="40" height="40" rx="9" fill="#C9415A"/><rect x="10" y="10" width="20" height="20" rx="2.5" fill="#fff"/><path d="M13.5 15h13M13.5 19.5h13M13.5 24h8" stroke="#C9415A" stroke-width="2" stroke-linecap="round"/></symbol>
+    <symbol id="gl-music" viewBox="0 0 40 40"><rect width="40" height="40" rx="9" fill="#E5487A"/><path d="M17 26.5V13l11-2.5v13" fill="none" stroke="#fff" stroke-width="2.4" stroke-linejoin="round"/><circle cx="14.5" cy="26.5" r="3.4" fill="#fff"/><circle cx="25.5" cy="23.5" r="3.4" fill="#fff"/></symbol>
+    <symbol id="gl-mail" viewBox="0 0 40 40"><rect width="40" height="40" rx="9" fill="#4AA3D8"/><rect x="9" y="12.5" width="22" height="15" rx="2.5" fill="#fff"/><path d="M10 14l10 7.5L30 14" fill="none" stroke="#4AA3D8" stroke-width="2"/></symbol>
+    <symbol id="gl-notes" viewBox="0 0 40 40"><rect width="40" height="40" rx="9" fill="#F2C94C"/><rect x="10" y="9" width="20" height="22" rx="2.5" fill="#fff"/><path d="M13.5 15h13M13.5 19.5h13M13.5 24h9" stroke="#D9A92A" stroke-width="2" stroke-linecap="round"/></symbol>
+    <symbol id="gl-map" viewBox="0 0 40 40"><rect width="40" height="40" rx="9" fill="#5FB36F"/><path d="M20 30s-7-7.2-7-12.2a7 7 0 0 1 14 0C27 22.8 20 30 20 30z" fill="#fff"/><circle cx="20" cy="17.8" r="2.6" fill="#5FB36F"/></symbol>
+    <symbol id="gl-cal" viewBox="0 0 40 40"><rect width="40" height="40" rx="9" fill="#FFFFFF" stroke="#D6E3E8"/><rect x="0.5" y="0.5" width="39" height="11" rx="8" fill="#E2553F"/><text x="20" y="31" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="17" font-weight="600" fill="#0B3442">9</text></symbol>
+    <!-- the app's own symbols (SF Symbols redrawn) -->
+    <symbol id="sy-case" viewBox="0 0 24 24"><path d="M9 6V4.8C9 4.4 9.4 4 9.8 4h4.4c.4 0 .8.4.8.8V6" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="3" y="6.5" width="18" height="13" rx="2.5" fill="currentColor"/><rect x="3" y="11.6" width="18" height="1.4" fill="var(--sym-cut,#fff)" opacity=".55"/></symbol>
+    <symbol id="sy-hand" viewBox="0 0 24 24"><path d="M8 12V6.2a1.3 1.3 0 0 1 2.6 0V11V4.6a1.3 1.3 0 0 1 2.6 0V11V5.6a1.3 1.3 0 0 1 2.6 0V12V8.4a1.3 1.3 0 0 1 2.6 0v6.4c0 3.6-2.4 6.2-6 6.2-2.5 0-3.9-1.1-5.1-3l-2.6-4a1.4 1.4 0 0 1 2.3-1.5z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></symbol>
+    <symbol id="sy-keep" viewBox="-24 -36 48 60"><path fill="currentColor" d="M-21 22V-20h0v-12h8v6h5v-8h8v8h8v-8h5v8h8v-6h0v12h0V22h-15V6a6 6 0 0 0-12 0v16z"/></symbol>
+    <symbol id="sy-waves" viewBox="0 0 24 24"><path d="M3 8c2-2 4-2 6 0s4 2 6 0 4-2 6 0M3 13c2-2 4-2 6 0s4 2 6 0 4-2 6 0M3 18c2-2 4-2 6 0s4 2 6 0 4-2 6 0" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="sy-drop" viewBox="0 0 24 24"><path d="M12 3s6.5 7.2 6.5 11.5a6.5 6.5 0 0 1-13 0C5.5 10.2 12 3 12 3z" fill="currentColor"/></symbol>
+    <symbol id="sy-bars" viewBox="0 0 24 24"><rect x="3" y="11" width="4.6" height="10" rx="1" fill="currentColor"/><rect x="9.7" y="5" width="4.6" height="16" rx="1" fill="currentColor"/><rect x="16.4" y="8" width="4.6" height="13" rx="1" fill="currentColor"/></symbol>
+    <symbol id="sy-gear" viewBox="0 0 24 24"><path d="M12 2.5l1.6 2.3 2.7-.7.6 2.7 2.7.6-.7 2.7 2.3 1.6-2.3 1.6.7 2.7-2.7.6-.6 2.7-2.7-.7L12 21.5l-1.6-2.3-2.7.7-.6-2.7-2.7-.6.7-2.7L2.5 12l2.3-1.6-.7-2.7 2.7-.6.6-2.7 2.7.7z" fill="currentColor"/><circle cx="12" cy="12" r="3.4" fill="var(--sym-cut,#fff)"/></symbol>
+    <symbol id="sy-lock" viewBox="0 0 24 24"><path d="M7.5 10.5V8a4.5 4.5 0 0 1 9 0v2.5" fill="none" stroke="currentColor" stroke-width="2"/><rect x="5" y="10" width="14" height="11" rx="2.5" fill="currentColor"/></symbol>
+    <symbol id="sy-unlock" viewBox="0 0 24 24"><path d="M14.5 10.5V7a4.5 4.5 0 0 1 9 0v1.5" fill="none" stroke="currentColor" stroke-width="2"/><rect x="2" y="10" width="15" height="11" rx="2.5" fill="currentColor"/></symbol>
+  </defs>
+</svg>
+
+<header class="top">
+  <div class="wrap">
+    <a class="btn small" href="index.html" aria-label="Back to Rayane's bench" data-copy-aria="moat.back">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3.5 L5.5 8 L10 12.5"/></svg><span data-copy="site.bench">Bench</span></a>
+    <nav aria-label="Sections"><a href="#guard" data-copy="moat.nav.guard">Guard</a><a href="#urge" data-copy="moat.nav.urge">The urge</a><a href="#cross" data-copy="moat.nav.cross">Cross</a><a href="#insights" data-copy="moat.nav.insights">Insights</a></nav>
+  </div>
+</header>
+
+<main>
+<!-- ============ hero ============ -->
+<section class="hero" id="top">
+  <div class="wrap">
+    <div class="lockup">
+      <h1><svg class="mk" viewBox="-16 -16 32 32" aria-hidden="true"><circle r="16" fill="var(--mist)"/><circle r="14" fill="var(--water)"/><circle r="8.6" fill="var(--g)"/><path fill="var(--i)" d="M-4.6 5V-3.4h1.8v1.6h1.6v-2.4h2.4v2.4h1.6v-1.6h1.8V5h-3.2V2.4a1.4 1.4 0 0 0-2.8 0V5z"/></svg><span data-copy="moat.title">Moat</span></h1>
+      <p class="tagline" data-copy="moat.tagline">Don't fight the urge. Moat it.</p>
+      <ul class="facts">
+        <li><span class="lb" data-copy="moat.facts.whatLabel">What</span><span class="tx" data-copy="moat.facts.what">An iPhone app that closes the apps you lose time to.</span></li>
+        <li><span class="lb" data-copy="moat.facts.whoLabel">For</span><span class="tx" data-copy="moat.facts.who">Anyone who opens a feed on reflex and wants the phone to hold the line at work and at night.</span></li>
+        <li><span class="lb" data-copy="moat.facts.howLabel">How</span><span class="tx" data-copy="moat.facts.how">You pick the apps and when they close; getting back in costs a small effort you chose in advance.</span></li>
+      </ul>
+    </div>
+    <div class="hstage">
+      <div class="phone">
+        <svg class="scr" viewBox="0 0 390 844" role="img" aria-label="Moat's Today screen" data-copy-aria="moat.heroAria">
+          <g class="sb"><text x="54" y="38" font-size="16" font-weight="600" data-copy="moat.ui.time">09:41</text><g class="ink"><rect x="292" y="28" width="3.5" height="6" rx="1"/><rect x="298" y="25.5" width="3.5" height="8.5" rx="1"/><rect x="304" y="23" width="3.5" height="11" rx="1"/><rect x="310" y="20.5" width="3.5" height="13.5" rx="1"/><rect x="330" y="21" width="24" height="12" rx="3.5" fill="none" stroke="var(--i)" stroke-width="1.2" opacity=".5"/><rect x="332" y="23" width="17" height="8" rx="2"/></g></g>
+          <!-- hand button (stay focused for a session) -->
+          <circle cx="344" cy="86" r="21" class="c" stroke="var(--line)"/><use href="#sy-hand" x="333" y="75" width="22" height="22" style="color:var(--i)"/>
+          <!-- the moat ring: water counts down the block -->
+          <circle cx="195" cy="250" r="122" class="m"/>
+          <circle id="hArc" cx="195" cy="250" r="99" fill="none" stroke="var(--water)" stroke-width="46" stroke-dasharray="622" stroke-dashoffset="112" transform="rotate(-90 195 250)"/>
+          <path class="crest" id="crestA" fill="none" stroke="var(--foam)" stroke-width="1.2" opacity=".35"/>
+          <path class="crest b" id="crestB" fill="none" stroke="var(--foam)" stroke-width="1" opacity=".28"/>
+          <circle cx="195" cy="250" r="76" class="gr"/>
+          <g transform="translate(150 206)" style="color:var(--i)"><use href="#sy-case" width="18" height="18" style="--sym-cut:var(--g)"/></g>
+          <text x="174" y="222" font-size="24" font-weight="700" data-copy="moat.ui.count">25m</text>
+          <use href="#sy-keep" x="167" y="234" width="56" height="70" style="color:var(--i)"/>
+          <g id="siege"></g>
+          <!-- block tiles -->
+          <rect x="16" y="404" width="172" height="132" rx="20" class="w"/>
+          <use href="#sy-case" x="32" y="420" width="28" height="28" style="color:var(--onw);--sym-cut:var(--water)"/>
+          <text x="32" y="512" font-size="16" font-weight="600" class="ow" data-copy="moat.ui.block">Deep work</text>
+          <rect x="32" y="522" width="120" height="3" rx="1.5" fill="var(--onw)" opacity=".7"/>
+          <rect x="202" y="404" width="172" height="132" rx="20" fill="none" stroke="var(--i2)" stroke-width="1.6" stroke-dasharray="7 6"/>
+          <path d="M288 460v20M278 470h20" stroke="var(--i2)" stroke-width="2.4" stroke-linecap="round"/>
+          <!-- focus session button -->
+          <circle cx="195" cy="620" r="36" fill="none" stroke="var(--water)" stroke-width="8" stroke-dasharray="180 46" transform="rotate(-70 195 620)"/>
+          <circle cx="195" cy="620" r="26" class="c"/>
+          <path d="M188 607v26l21-13z" class="w"/>
+          <!-- tab bar -->
+          <rect x="16" y="752" width="358" height="64" rx="22" class="c" stroke="var(--line)"/>
+          <rect x="24" y="758" width="84" height="52" rx="16" class="m"/>
+          <use href="#sy-waves" x="54" y="763" width="24" height="24" style="color:var(--water)"/><text x="66" y="802" font-size="11" font-weight="600" text-anchor="middle" fill="var(--water)" style="fill:var(--water)" data-copy="moat.ui.tabs.today">Today</text>
+          <use href="#sy-drop" x="140" y="763" width="24" height="24" style="color:var(--i)"/><text x="152" y="802" font-size="11" font-weight="500" text-anchor="middle" data-copy="moat.ui.tabs.lite">Lite</text>
+          <use href="#sy-bars" x="226" y="763" width="24" height="24" style="color:var(--i)"/><text x="238" y="802" font-size="11" font-weight="500" text-anchor="middle" data-copy="moat.ui.tabs.insights">Insights</text>
+          <use href="#sy-gear" x="312" y="763" width="24" height="24" style="color:var(--i);--sym-cut:var(--card)"/><text x="324" y="802" font-size="11" font-weight="500" text-anchor="middle" data-copy="moat.ui.tabs.settings">Settings</text>
+          <rect x="130" y="830" width="130" height="5" rx="2.5" class="ink"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+  <div class="lake" aria-hidden="true"><svg viewBox="0 0 2880 128" preserveAspectRatio="none" id="lake"></svg></div>
+</section>
+
+<!-- ============ 1. guard ============ -->
+<section class="scene" id="guard">
+  <svg class="seam" viewBox="0 0 1440 24" preserveAspectRatio="none" aria-hidden="true"><path d="M0 12C60 2 120 2 180 12S300 22 360 12 480 2 540 12 660 22 720 12 840 2 900 12 1020 22 1080 12 1200 2 1260 12 1380 22 1440 12"/></svg>
+  <div class="wrap">
+    <div class="copy">
+      <h2 data-copy="moat.guard.title">You pick what to guard and when the moat fills</h2>
+      <p class="sub" data-copy="moat.guard.sub">Ready-made lists or single apps and sites.</p>
+      <p class="hint"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><use href="#sy-hand" style="color:var(--water)"/></svg><span data-copy="moat.guard.hint">Tap a toll to choose it</span></p>
+    </div>
+    <div class="stage">
+      <div class="phone">
+        <svg class="scr" viewBox="0 0 390 844" role="group" aria-label="Moat's block editor" data-copy-aria="moat.guard.aria">
+          <g><text x="54" y="38" font-size="16" font-weight="600" data-copy="moat.ui.time">09:41</text><g class="ink"><rect x="304" y="23" width="3.5" height="11" rx="1"/><rect x="310" y="20.5" width="3.5" height="13.5" rx="1"/><rect x="330" y="21" width="24" height="12" rx="3.5" fill="none" stroke="var(--i)" stroke-width="1.2" opacity=".5"/><rect x="332" y="23" width="17" height="8" rx="2"/></g></g>
+          <circle cx="42" cy="80" r="20" class="c" stroke="var(--line)"/><path d="M35 73l14 14M49 73L35 87" stroke="var(--i)" stroke-width="2" stroke-linecap="round"/>
+          <text x="195" y="86" font-size="17" font-weight="600" text-anchor="middle" data-copy="moat.ui.block">Deep work</text>
+          <circle cx="300" cy="80" r="20" class="c" stroke="var(--line)"/><g class="ink"><circle cx="292" cy="80" r="2.2"/><circle cx="300" cy="80" r="2.2"/><circle cx="308" cy="80" r="2.2"/></g>
+          <circle cx="348" cy="80" r="20" class="w"/><path d="M339 80l6 6 12-12" fill="none" stroke="var(--onw)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+          <rect x="161" y="112" width="68" height="68" rx="18" class="w"/><use href="#sy-case" x="177" y="128" width="36" height="36" style="color:var(--onw);--sym-cut:var(--water)"/>
+          <text x="195" y="214" font-size="21" font-weight="700" text-anchor="middle" data-copy="moat.ui.block">Deep work</text>
+          <rect x="16" y="232" width="358" height="42" rx="12" class="m"/>
+          <text x="195" y="258" font-size="12.5" text-anchor="middle" class="mu" data-copy="moat.ui.reason">You set this time aside for work that matters.</text>
+          <text x="20" y="306" font-size="14" font-weight="600" class="mu" data-copy="moat.ui.editor.blockList">Block list</text>
+          <rect x="16" y="316" width="358" height="110" rx="16" class="m"/>
+          <g class="seg" role="button" tabindex="0" aria-pressed="true" data-seg="0"><rect class="bx" x="26" y="326" width="164" height="34" rx="10"/><text x="108" y="348" font-size="14" font-weight="600" text-anchor="middle" data-copy="moat.ui.editor.block">Block</text></g>
+          <g class="seg" role="button" tabindex="0" aria-pressed="false" data-seg="1"><rect class="bx" x="200" y="326" width="164" height="34" rx="10"/><text x="282" y="348" font-size="14" font-weight="600" text-anchor="middle" data-copy="moat.ui.editor.only">Only</text></g>
+          <use href="#gl-clip" x="28" y="372" width="40" height="40"/><use href="#gl-feed" x="78" y="372" width="40" height="40"/><use href="#gl-chat" x="128" y="372" width="40" height="40"/>
+          <rect x="179" y="373" width="38" height="38" rx="9" fill="none" stroke="var(--water)" stroke-width="1.6" stroke-dasharray="4 4"/><path d="M198 384v16M190 392h16" stroke="var(--water)" stroke-width="2" stroke-linecap="round"/>
+          <text x="20" y="458" font-size="14" font-weight="600" class="mu" data-copy="moat.ui.editor.when">When</text>
+          <rect x="16" y="468" width="358" height="84" rx="16" class="m"/>
+          <g id="whenRow"></g>
+          <text x="20" y="584" font-size="14" font-weight="600" class="mu" data-copy="moat.ui.editor.unblock">To unblock</text>
+          <rect x="16" y="594" width="358" height="200" rx="16" class="m"/>
+          <g id="tollGrid"></g>
+          <rect x="130" y="830" width="130" height="5" rx="2.5" class="ink"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 2. the urge ============ -->
+<section class="scene urge" id="urge" data-s="shield">
+  <svg class="seam" viewBox="0 0 1440 24" preserveAspectRatio="none" aria-hidden="true"><path d="M0 12C60 2 120 2 180 12S300 22 360 12 480 2 540 12 660 22 720 12 840 2 900 12 1020 22 1080 12 1200 2 1260 12 1380 22 1440 12"/></svg>
+  <div class="wrap">
+    <div class="copy">
+      <h2 data-copy="moat.urge.title">Reach for a guarded app and the shield is already up</h2>
+      <p class="sub" data-copy="moat.urge.sub">The shield shows the reason you wrote for the block.</p>
+    </div>
+    <div class="stage">
+      <div class="phone">
+        <svg class="scr" viewBox="0 0 390 844" role="img" aria-label="A guarded app opens onto Moat's shield" data-copy-aria="moat.urge.aria">
+          <defs><linearGradient id="wall" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2B7FA3"/><stop offset=".55" stop-color="#155A78"/><stop offset="1" stop-color="#0B3442"/></linearGradient></defs>
+          <rect width="390" height="844" fill="url(#wall)"/>
+          <g fill="#fff"><text x="54" y="38" font-size="16" font-weight="600" style="fill:#fff" data-copy="moat.ui.time">09:41</text><rect x="310" y="20.5" width="3.5" height="13.5" rx="1"/><rect x="304" y="23" width="3.5" height="11" rx="1"/><rect x="332" y="23" width="17" height="8" rx="2"/></g>
+          <g id="homeGrid"></g>
+          <rect x="16" y="716" width="358" height="92" rx="30" fill="#fff" opacity=".22"/>
+          <use href="#gl-mail" x="38" y="732" width="60" height="60"/><use href="#gl-music" x="122" y="732" width="60" height="60"/><use href="#gl-map" x="208" y="732" width="60" height="60"/><use href="#gl-notes" x="292" y="732" width="60" height="60"/>
+          <g id="thumb"><circle cx="70" cy="125" r="30" fill="#fff" opacity=".75"/></g>
+          <!-- Moat's shield over the app -->
+          <g id="shield">
+            <rect width="390" height="844" fill="#0E1B23"/>
+            <g fill="#fff"><text x="54" y="38" font-size="16" font-weight="600" style="fill:#E2EDF4" data-copy="moat.ui.time">09:41</text></g>
+            <use href="#sy-case" x="153" y="288" width="84" height="84" style="color:#5E9BC4;--sym-cut:#0E1B23"/>
+            <use href="#gl-clip" x="222" y="350" width="28" height="28"/>
+            <text x="195" y="420" font-size="26" font-weight="700" text-anchor="middle" style="fill:#E2EDF4" data-copy="moat.ui.block">Deep work</text>
+            <text x="195" y="450" font-size="14.5" text-anchor="middle" style="fill:#9CB2C1" data-copy="moat.ui.reason">You set this time aside for work that matters.</text>
+            <rect x="24" y="684" width="342" height="52" rx="14" fill="#5E9BC4"/>
+            <text x="195" y="716" font-size="17" font-weight="600" text-anchor="middle" style="fill:#0D161D" data-copy="moat.ui.shield.close">Close</text>
+            <rect x="72" y="752" width="124" height="44" rx="12" fill="none" stroke="#E2EDF4" stroke-opacity=".7" stroke-width="1.4"/>
+            <use href="#sy-drop" x="88" y="764" width="18" height="18" style="color:#E2EDF4"/>
+            <text x="148" y="780" font-size="15" font-weight="500" text-anchor="middle" style="fill:#E2EDF4" data-copy="moat.ui.shield.lite">Open lite</text>
+            <text x="262" y="780" font-size="15" font-weight="500" text-anchor="middle" style="fill:#9CB2C1" data-copy="moat.ui.shield.unblock">Unblock…</text>
+          </g>
+          <rect x="130" y="830" width="130" height="5" rx="2.5" fill="#E2EDF4"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 3. cross or not ============ -->
+<section class="scene cross" id="cross" data-s="toll">
+  <svg class="seam" viewBox="0 0 1440 24" preserveAspectRatio="none" aria-hidden="true"><path d="M0 12C60 2 120 2 180 12S300 22 360 12 480 2 540 12 660 22 720 12 840 2 900 12 1020 22 1080 12 1200 2 1260 12 1380 22 1440 12"/></svg>
+  <div class="wrap">
+    <div class="copy">
+      <h2 data-copy="moat.cross.title">Crossing costs the effort you chose; staying out costs one tap</h2>
+      <p class="sub" data-copy="moat.cross.sub">Hold, wait, type, sums, breathe or a tag.</p>
+      <p class="hint"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><use href="#sy-hand" style="color:var(--water)"/></svg><span data-copy="moat.cross.try">Press and hold the circle on the phone</span></p>
+    </div>
+    <div class="stage">
+      <div class="phone">
+        <svg class="scr" viewBox="0 0 390 844" role="group" aria-label="Moat's toll screen" data-copy-aria="moat.cross.aria">
+          <rect width="390" height="844" class="gr"/>
+          <g><text x="54" y="38" font-size="16" font-weight="600" data-copy="moat.ui.time">09:41</text><g class="ink"><rect x="304" y="23" width="3.5" height="11" rx="1"/><rect x="310" y="20.5" width="3.5" height="13.5" rx="1"/><rect x="332" y="23" width="17" height="8" rx="2"/></g></g>
+          <!-- toll: hold to open -->
+          <g data-v="toll">
+            <g class="tap2" id="stayBtn" role="button" tabindex="0" style="cursor:pointer"><rect x="16" y="60" width="128" height="38" rx="12" class="c" stroke="var(--line)"/><text x="80" y="84" font-size="15" font-weight="600" text-anchor="middle" data-copy="moat.ui.challenge.stay">Stay focused</text></g>
+            <text x="262" y="84" font-size="14" font-weight="600" text-anchor="middle" data-copy="moat.ui.block">Deep work</text>
+            <rect x="157" y="124" width="76" height="76" rx="20" class="w"/><use href="#sy-case" x="175" y="142" width="40" height="40" style="color:var(--onw);--sym-cut:var(--water)"/>
+            <g id="holdBtn" role="button" tabindex="0" aria-label="Hold to open">
+              <circle cx="195" cy="360" r="104" fill="transparent"/>
+              <circle id="holdFocus" cx="195" cy="360" r="100" fill="none" stroke="var(--i)" stroke-width="2" opacity="0"/>
+              <circle cx="195" cy="360" r="94" fill="none" stroke="var(--mist)" stroke-width="6"/>
+              <circle id="holdRing" cx="195" cy="360" r="94" fill="none" stroke="var(--deep)" stroke-width="6" stroke-linecap="round" stroke-dasharray="590.6" stroke-dashoffset="590.6" transform="rotate(-90 195 360)"/>
+              <g class="core"><circle cx="195" cy="360" r="82" class="w"/><use href="#sy-hand" x="171" y="336" width="48" height="48" style="color:var(--onw)"/></g>
+            </g>
+            <text x="195" y="490" font-size="16" font-weight="600" text-anchor="middle" class="mu" data-copy="moat.ui.challenge.hold">Hold to open</text>
+          </g>
+          <!-- crossed: open for five minutes -->
+          <g data-v="open">
+            <rect x="16" y="60" width="72" height="38" rx="12" class="c" stroke="var(--line)"/><text x="52" y="84" font-size="15" font-weight="600" text-anchor="middle" data-copy="moat.ui.challenge.done">Done</text>
+            <text x="262" y="84" font-size="14" font-weight="600" text-anchor="middle" data-copy="moat.ui.block">Deep work</text>
+            <rect x="157" y="124" width="76" height="76" rx="20" class="m"/><use href="#sy-case" x="175" y="142" width="40" height="40" style="color:var(--i);--sym-cut:var(--mist)"/>
+            <use href="#sy-unlock" x="174" y="226" width="44" height="44" style="color:var(--water)"/>
+            <text id="openCount" x="195" y="352" font-size="72" font-weight="700" text-anchor="middle" style="font-variant-numeric:tabular-nums">4:59</text>
+            <text id="openUntil" x="195" y="384" font-size="14" text-anchor="middle" class="mu">until 09:46</text>
+            <rect x="24" y="416" width="342" height="50" rx="14" class="w"/>
+            <use href="#sy-lock" x="140" y="431" width="18" height="18" style="color:var(--onw)"/>
+            <text x="204" y="447" font-size="16" font-weight="600" text-anchor="middle" class="ow" data-copy="moat.ui.challenge.closeNow">Close now</text>
+          </g>
+          <!-- stayed: the shield stays up -->
+          <g data-v="stay">
+            <use href="#sy-case" x="153" y="288" width="84" height="84" style="color:var(--water);--sym-cut:var(--g)"/>
+            <text x="195" y="420" font-size="26" font-weight="700" text-anchor="middle" data-copy="moat.ui.block">Deep work</text>
+            <text x="195" y="450" font-size="14.5" text-anchor="middle" class="mu" data-copy="moat.ui.reason">You set this time aside for work that matters.</text>
+            <rect x="24" y="684" width="342" height="52" rx="14" class="w"/>
+            <text x="195" y="716" font-size="17" font-weight="600" text-anchor="middle" class="ow" data-copy="moat.ui.shield.close">Close</text>
+          </g>
+          <rect x="130" y="830" width="130" height="5" rx="2.5" class="ink"/>
+        </svg>
+      </div>
+      <div class="keepbox">
+        <svg class="keep" viewBox="-125 -125 250 250" role="img" aria-label="The keep in its moat" data-copy-aria="moat.cross.keepAria">
+          <defs><clipPath id="kChan"><circle r="112"/></clipPath></defs>
+          <circle r="123" fill="var(--g)"/>
+          <circle r="112" fill="var(--mist)"/>
+          <g clip-path="url(#kChan)"><circle r="100" fill="var(--water)"/><path id="kBack" fill="var(--water)" opacity=".45" fill-rule="evenodd"/></g>
+          <circle class="opening" r="101" fill="none" stroke="var(--acc)" stroke-width="2.5"/>
+          <g clip-path="url(#kChan)"><circle class="ripple" r="74" fill="none" stroke="var(--foam)" stroke-width="1.6"/><circle class="ripple b" r="74" fill="none" stroke="var(--foam)" stroke-width="1.2"/></g>
+          <path id="kIsle" fill="var(--g)"/>
+          <g class="splash" transform="translate(-58 -62)"><ellipse rx="22" ry="8" fill="none" stroke="var(--foam)" stroke-width="2"/><ellipse class="b" rx="14" ry="5" fill="none" stroke="var(--foam)" stroke-width="1.6"/></g>
+          <g class="drop" transform="translate(-58 -62)"><g transform="translate(-12 -12) scale(.6)"><use href="#gl-clip" width="40" height="40"/></g></g>
+          <g class="bridge"><rect x="-9.5" y="22" width="19" height="94" rx="1.5" fill="var(--i)"/>
+            <g stroke="var(--g)" stroke-width="1.2" opacity=".7"><line x1="-9.5" y1="38" x2="9.5" y2="38"/><line x1="-9.5" y1="54" x2="9.5" y2="54"/><line x1="-9.5" y1="70" x2="9.5" y2="70"/><line x1="-9.5" y1="86" x2="9.5" y2="86"/><line x1="-9.5" y1="102" x2="9.5" y2="102"/></g></g>
+          <g class="walker" transform="translate(-3 104)"><g><circle cy="-7" r="2.6" fill="var(--acc)"/><rect x="-2" y="-4" width="4" height="7" rx="2" fill="var(--acc)"/></g></g>
+          <g class="walker b" transform="translate(3 104)"><g><circle cy="-7" r="2.6" fill="var(--water)"/><rect x="-2" y="-4" width="4" height="7" rx="2" fill="var(--water)"/></g></g>
+          <path fill="var(--i)" fill-rule="evenodd" d="M-21 22 V-20 H-21 V-32 H-13 V-26 H-8 V-34 H0 V-26 H8 V-34 H13 V-26 H21 V-32 H21 V22 Z M-6 22 V6 A6 6 0 0 1 6 6 V22 Z"/>
+        </svg>
+        <p class="status" id="crossStatus" aria-live="polite"></p>
+        <button class="btn small again" type="button" id="againBtn"><svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8a4.5 4.5 0 1 0 1.3-3.2M3.5 2.5v2.6h2.6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span data-copy="moat.cross.again">Again</span></button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 4. insights ============ -->
+<section class="scene ins" id="insights">
+  <svg class="seam" viewBox="0 0 1440 24" preserveAspectRatio="none" aria-hidden="true"><path d="M0 12C60 2 120 2 180 12S300 22 360 12 480 2 540 12 660 22 720 12 840 2 900 12 1020 22 1080 12 1200 2 1260 12 1380 22 1440 12"/></svg>
+  <div class="wrap">
+    <div class="copy">
+      <h2 data-copy="moat.insights.title">Afterwards, Insights shows how often the moat held</h2>
+      <p class="sub" data-copy="moat.insights.sub">Seven days of stops against unblocks.</p>
+    </div>
+    <div class="stage">
+      <div class="phone">
+        <svg class="scr" viewBox="0 0 390 844" role="img" aria-label="Moat's Insights screen" data-copy-aria="moat.insights.aria">
+          <g><text x="54" y="38" font-size="16" font-weight="600" data-copy="moat.ui.time">09:41</text><g class="ink"><rect x="304" y="23" width="3.5" height="11" rx="1"/><rect x="310" y="20.5" width="3.5" height="13.5" rx="1"/><rect x="332" y="23" width="17" height="8" rx="2"/></g></g>
+          <text x="20" y="96" font-size="30" font-weight="700" data-copy="moat.ui.insights.title">Insights</text>
+          <rect x="16" y="116" width="358" height="262" rx="22" class="m"/>
+          <text x="38" y="190" font-size="64" font-weight="700" id="insStopped">6</text>
+          <use href="#sy-hand" x="82" y="150" width="26" height="26" style="color:var(--water)"/>
+          <g id="insBars"></g>
+          <circle cx="42" cy="358" r="4" class="w"/><text x="52" y="362" font-size="11.5" class="mu" data-copy="moat.ui.insights.stopped">Stopped</text>
+          <circle cx="122" cy="358" r="4" fill="var(--acc)"/><text x="132" y="362" font-size="11.5" class="mu" data-copy="moat.ui.insights.unblocked">Unblocked</text>
+          <g id="insTiles"></g>
+          <rect x="16" y="560" width="358" height="56" rx="16" class="m"/>
+          <use href="#sy-case" x="34" y="577" width="22" height="22" style="color:var(--water);--sym-cut:var(--mist)"/>
+          <text x="68" y="594" font-size="16" font-weight="600" data-copy="moat.ui.block">Deep work</text>
+          <use href="#sy-hand" x="300" y="579" width="16" height="16" style="color:var(--water)"/><text x="320" y="593" font-size="14" font-weight="600" fill="var(--water)" style="fill:var(--water)">6</text>
+          <use href="#sy-unlock" x="334" y="579" width="15" height="15" style="color:var(--acc)"/><text x="352" y="593" font-size="14" font-weight="600" style="fill:var(--acc)">2</text>
+          <rect x="16" y="752" width="358" height="64" rx="22" class="c" stroke="var(--line)"/>
+          <rect x="196" y="758" width="84" height="52" rx="16" class="m"/>
+          <use href="#sy-waves" x="54" y="763" width="24" height="24" style="color:var(--i)"/><text x="66" y="802" font-size="11" font-weight="500" text-anchor="middle" data-copy="moat.ui.tabs.today">Today</text>
+          <use href="#sy-drop" x="140" y="763" width="24" height="24" style="color:var(--i)"/><text x="152" y="802" font-size="11" font-weight="500" text-anchor="middle" data-copy="moat.ui.tabs.lite">Lite</text>
+          <use href="#sy-bars" x="226" y="763" width="24" height="24" style="color:var(--water)"/><text x="238" y="802" font-size="11" font-weight="600" text-anchor="middle" style="fill:var(--water)" data-copy="moat.ui.tabs.insights">Insights</text>
+          <use href="#sy-gear" x="312" y="763" width="24" height="24" style="color:var(--i);--sym-cut:var(--card)"/><text x="324" y="802" font-size="11" font-weight="500" text-anchor="middle" data-copy="moat.ui.tabs.settings">Settings</text>
+          <rect x="130" y="830" width="130" height="5" rx="2.5" class="ink"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="lake" aria-hidden="true"><svg viewBox="0 0 2880 64" preserveAspectRatio="none" id="lake2"></svg></div>
+  <div class="wrap foot">
+    <a class="btn small" href="index.html"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3.5 L5.5 8 L10 12.5"/></svg><span data-copy="site.benchBack">Back to the bench</span></a>
+    <p data-copy="moat.invented">Block names, counts and times on the phones are invented.</p>
+    <p data-copy="moat.footer">Designed and built by Rayane El Metni.</p>
+  </div>
+</footer>
+
+<script>
+(function(){
+"use strict";
+var COPY = window.COPY || {}, M = COPY.moat || {};
+var RM = false; try { RM = matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) {}
+var NS = "http://www.w3.org/2000/svg";
+function $(id){ return document.getElementById(id); }
+function $$(s, r){ return Array.prototype.slice.call((r || document).querySelectorAll(s)); }
+function cget(p){ return p.split(".").reduce(function(o, k){ return o == null ? undefined : o[k]; }, COPY); }
+function r1(n){ return Math.round(n * 10) / 10; }
+function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]; }); }
+
+/* ---------- copy: every word comes from copy-moat.js ---------- */
+function applyCopy(root){
+  $$("[data-copy]", root).forEach(function(el){ var v = cget(el.getAttribute("data-copy")); if (typeof v === "string") el.textContent = v; });
+  $$("[data-copy-aria]", root).forEach(function(el){ var v = cget(el.getAttribute("data-copy-aria")); if (typeof v === "string") el.setAttribute("aria-label", v); });
+}
+if (M.title) document.title = M.title;
+
+/* ---------- water: lake bands and the crests on the ring ---------- */
+function lake(id, h, a, b){
+  var p1 = "M0 " + h + "V" + a, p2 = "M0 " + h + "V" + b;
+  for (var x = 0; x <= 2880; x += 40) {
+    p1 += "L" + x + " " + r1(a + Math.sin(x / 2880 * Math.PI * 12) * h * .1);
+    p2 += "L" + x + " " + r1(b + Math.sin(x / 2880 * Math.PI * 16 + 1) * h * .08);
+  }
+  $(id).innerHTML = '<path class="wv1" d="' + p1 + "V" + h + 'Z"/><path class="wv2" d="' + p2 + "V" + h + 'Z"/>';
+}
+lake("lake", 128, 52, 84);
+lake("lake2", 64, 22, 38);
+function wavy(cx, cy, r, amp, n){ var s = ""; for (var i = 0; i <= 180; i++) { var a = i / 180 * Math.PI * 2, rr = r + amp * Math.sin(n * a); s += (i ? "L" : "M") + r1(cx + rr * Math.cos(a)) + " " + r1(cy + rr * Math.sin(a)); } return s + "Z"; }
+$("crestA").setAttribute("d", wavy(195, 250, 108, 2, 17));
+$("crestB").setAttribute("d", wavy(195, 250, 88, 1.6, 13));
+$("kBack").setAttribute("d", wavy(0, 0, 103, 1.5, 19) + wavy(0, 0, 80, 1.3, 19));
+$("kIsle").setAttribute("d", wavy(0, 0, 66, 1.1, 17));
+
+/* ---------- a linear() spring for the drawbridge (the site's token: .8 s, bounce .3) ---------- */
+try {
+  if (CSS.supports("transition-timing-function", "linear(0, 1)")) {
+    var z = .7, w = 2 * Math.PI / .62, wd = w * Math.sqrt(1 - z * z), pts = [];
+    for (var i = 0; i <= 48; i++) { var t = i / 48 * .8; pts.push((1 - Math.exp(-z * w * t) * (Math.cos(wd * t) + z * w / wd * Math.sin(wd * t))).toFixed(4)); }
+    pts[pts.length - 1] = "1";
+    document.documentElement.style.setProperty("--spring", "linear(" + pts.join(",") + ")");
+  }
+} catch (e) {}
+
+/* ---------- scene 1: the editor's When row and toll grid ---------- */
+(function(){
+  var E = (M.ui && M.ui.editor) || {}, when = E.when3 || [], tolls = E.challenges || [];
+  var wg = ["M7 7h10a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2zM5 11h14M9 5v4M15 5v4",
+            "M12 21s-6-6-6-10.5a6 6 0 0 1 12 0C18 15 12 21 12 21zM12 8.5a2 2 0 1 0 0 4 2 2 0 0 0 0-4z",
+            "M7 4h10M7 20h10M8 4c0 5 8 5 8 8s-8 3-8 8M16 4c0 5-8 5-8 8s8 3 8 8"];
+  var h = "";
+  for (var k = 0; k < 3; k++) {
+    var x = 26 + k * 116;
+    h += '<g class="tap" role="button" tabindex="0" aria-pressed="' + (k === 0) + '" data-group="when"><rect class="bx" x="' + x + '" y="478" width="106" height="64" rx="12"/>' +
+         '<path d="' + wg[k] + '" transform="translate(' + (x + 41) + ' 486)" fill="none" stroke="var(--i)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>' +
+         '<text x="' + (x + 53) + '" y="530" font-size="12" font-weight="500" text-anchor="middle">' + esc(when[k] || "") + "</text></g>";
+  }
+  $("whenRow").innerHTML = h;
+  var gl = [
+    '<circle cx="0" cy="0" r="14" fill="none" stroke="var(--water)" stroke-width="2.4"/><circle r="4" fill="var(--i)"/>',
+    '<circle r="14" fill="var(--water)" opacity=".25"/><path d="M-14 0a14 14 0 0 0 28 0z" fill="var(--water)"/>',
+    '<text x="0" y="6" font-size="17" font-weight="600" text-anchor="middle" fill="var(--i)">Aa</text>',
+    '<text x="0" y="6" font-size="15" font-weight="600" text-anchor="middle" fill="var(--i)">7×8</text>',
+    '<circle r="11" fill="var(--water)"/><circle r="15" fill="none" stroke="var(--water)" stroke-width="1.2" opacity=".5"/>',
+    '<g fill="var(--i2)"><circle cx="-12" r="3"/><circle cx="-4" r="3"/><circle cx="4" r="3"/><circle cx="12" r="3"/></g>',
+    '<path d="M-6-9a12 12 0 0 1 0 18M0-13a17 17 0 0 1 0 26M6-6a7 7 0 0 1 0 12" fill="none" stroke="var(--i2)" stroke-width="2" stroke-linecap="round" transform="translate(-2 0)"/>',
+    '<use href="#sy-lock" x="-12" y="-13" width="24" height="24" style="color:var(--i)"/>'
+  ];
+  h = "";
+  for (var j = 0; j < 8; j++) {
+    var cx = 26 + (j % 4) * 86, cy = 604 + Math.floor(j / 4) * 92;
+    h += '<g class="tap" role="button" tabindex="0" aria-pressed="' + (j === 0) + '" data-group="toll"><rect class="bx" x="' + cx + '" y="' + cy + '' + '" width="78" height="82" rx="12"/>' +
+         '<g transform="translate(' + (cx + 39) + " " + (cy + 32) + ')">' + gl[j] + "</g>" +
+         '<text x="' + (cx + 39) + '" y="' + (cy + 70) + '" font-size="12" font-weight="500" text-anchor="middle">' + esc(tolls[j] || "") + "</text></g>";
+  }
+  $("tollGrid").innerHTML = h;
+  function pick(el){
+    var grp = el.getAttribute("data-group");
+    $$('.tap[data-group="' + grp + '"]').forEach(function(o){ o.setAttribute("aria-pressed", o === el ? "true" : "false"); });
+  }
+  $$(".tap").forEach(function(el){
+    el.addEventListener("click", function(){ pick(el); });
+    el.addEventListener("keydown", function(e){ if (e.key === "Enter" || e.key === " ") { e.preventDefault(); pick(el); } });
+  });
+  $$(".seg").forEach(function(el){
+    function go(){ $$(".seg").forEach(function(o){ o.setAttribute("aria-pressed", o === el ? "true" : "false"); }); }
+    el.addEventListener("click", go);
+    el.addEventListener("keydown", function(e){ if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } });
+  });
+})();
+
+/* ---------- scene 2: the home screen ---------- */
+(function(){
+  var icons = ["gl-clip","gl-cal","gl-cam","gl-news","gl-feed","gl-shop","gl-game","gl-chat","gl-notes","gl-map","gl-mail","gl-music"];
+  var h = "";
+  for (var k = 0; k < 12; k++) {
+    var x = 40 + (k % 4) * 84, y = 95 + Math.floor(k / 4) * 98;
+    h += '<use href="#' + icons[k] + '" x="' + x + '" y="' + y + '" width="60" height="60"/>' +
+         '<rect x="' + (x + 12) + '" y="' + (y + 68) + '" width="36" height="5" rx="2.5" fill="#fff" opacity=".55"/>';
+  }
+  $("homeGrid").innerHTML = h;
+})();
+
+/* ---------- scene 4: insights bars and tiles (invented week) ---------- */
+(function(){
+  var I = (M.ui && M.ui.insights) || {}, days = I.days || [];
+  var stop = [0, 1, 0, 2, 1, 2, 0], unb = [0, 0, 0, 1, 0, 1, 0], max = 2, base = 318, hgt = 108, h = "";
+  for (var d = 0; d < 7; d++) {
+    var x = 52 + d * 44;
+    if (stop[d]) h += '<rect class="bar" x="' + (x - 6) + '" y="' + (base - stop[d] / max * hgt) + '" width="9" height="' + (stop[d] / max * hgt) + '" rx="3" fill="var(--water)"/>';
+    if (unb[d]) h += '<rect class="bar u" x="' + (x + 5) + '" y="' + (base - unb[d] / max * hgt) + '" width="9" height="' + (unb[d] / max * hgt) + '" rx="3" fill="var(--acc)"/>';
+    h += '<text x="' + (x + 4) + '" y="' + (base + 18) + '" font-size="11" text-anchor="middle" class="mu">' + esc(days[d] || "") + "</text>";
+  }
+  h += '<line x1="38" x2="352" y1="' + base + '" y2="' + base + '" stroke="var(--i2)" stroke-opacity=".25"/>';
+  $("insBars").innerHTML = h;
+  var tiles = [["sy-hand", "6", I.stopped, "var(--water)"], ["sy-waves", "4", I.resisted, "var(--water)"], ["sy-unlock", "2", I.unblocks, "var(--acc)"], ["sy-drop", I.focusValue || "30m", I.focus, "var(--water)"]];
+  h = "";
+  tiles.forEach(function(t, k){
+    var x = 16 + (k % 2) * 184, y = 392 + Math.floor(k / 2) * 80;
+    h += '<rect x="' + x + '" y="' + y + '" width="174" height="70" rx="16" class="m"/>' +
+         '<use href="#' + t[0] + '" x="' + (x + 16) + '" y="' + (y + 23) + '" width="24" height="24" style="color:' + t[3] + '"/>' +
+         '<text x="' + (x + 52) + '" y="' + (y + 34) + '" font-size="22" font-weight="700">' + esc(t[1]) + "</text>" +
+         '<text x="' + (x + 52) + '" y="' + (y + 54) + '" font-size="12" class="mu">' + esc(t[2] || "") + "</text>";
+  });
+  $("insTiles").innerHTML = h;
+})();
+
+applyCopy(document);
+
+/* ---------- hero: the siege on the ring (generic app glyphs, no brand marks) ---------- */
+(function(){
+  var g = $("siege"), CX = 195, CY = 250, RO = 122, icons = ["gl-clip","gl-feed","gl-chat","gl-game","gl-cam","gl-shop"];
+  function sticker(id, x, y, s, rot, op){ return '<g transform="translate(' + r1(x) + " " + r1(y) + ") rotate(" + r1(rot) + ") scale(" + r1(s * 100) / 100 + ')" opacity="' + r1(op * 100) / 100 + '"><use href="#' + id + '" x="-20" y="-20" width="40" height="40"/></g>'; }
+  if (RM) { g.innerHTML = sticker("gl-clip", 70, 150, .7, -12, 1) + sticker("gl-feed", 330, 196, .7, 10, 1) + sticker("gl-chat", 92, 352, .7, 8, 1); return; }
+  var shots = [], seed = 7;
+  function rnd(){ seed = (seed * 9301 + 49297) % 233280; return seed / 233280; }
+  function spawn(t){
+    var side = rnd() < .5 ? -1 : 1, a = (side < 0 ? 210 : 30) + rnd() * 120, ar = a * Math.PI / 180;
+    var splash = rnd() < .62, rad = splash ? 104 + rnd() * 14 : RO + 6;
+    shots.push({ t0:t, id:icons[Math.floor(rnd() * icons.length)], S:[side < 0 ? -30 : 420, 60 + rnd() * 300], T:[CX + Math.sin(ar) * rad, CY - Math.cos(ar) * rad], out:[Math.sin(ar), -Math.cos(ar)], fl:.95 + rnd() * .35, lift:50 + rnd() * 60, spin:(rnd() - .5) * 400, splash:splash });
+  }
+  var next = .3, raf = 0, t0 = 0, on = true;
+  function frame(now){
+    if (!t0) t0 = now;
+    var t = (now - t0) / 1000, h = "";
+    if (t > next) { spawn(t); next = t + .9 + rnd() * .8; }
+    shots = shots.filter(function(p){ return t - p.t0 < p.fl + .9; });
+    shots.forEach(function(p){
+      var e = t - p.t0, u = e / p.fl;
+      if (u <= 1) {
+        var q = u * (.55 + .45 * u), x = p.S[0] + (p.T[0] - p.S[0]) * q, y = p.S[1] + (p.T[1] - p.S[1]) * q - p.lift * 4 * u * (1 - u);
+        h += sticker(p.id, x, y, .62, p.spin * u, 1);
+      } else {
+        var d = e - p.fl;
+        if (p.splash) {
+          if (d < .7) {
+            h += '<circle cx="' + r1(p.T[0]) + '" cy="' + r1(p.T[1]) + '" r="' + r1(5 + 34 * d) + '" fill="var(--foam)" opacity="' + r1(Math.max(0, 1 - d / .18) * 85) / 100 + '"/>';
+            [0, .14].forEach(function(dl){ var k = Math.max(0, Math.min(1, (d - dl) / (.7 - dl))); if (k > 0) h += '<ellipse cx="' + r1(p.T[0]) + '" cy="' + r1(p.T[1]) + '" rx="' + r1(5 + 20 * k) + '" ry="' + r1(3 + 8 * k) + '" fill="none" stroke="var(--foam)" stroke-width="1.6" opacity="' + r1((1 - k) * 100) / 100 + '"/>'; });
+            var sy = Math.max(0, .62 - d / .3 * .62);
+            if (sy > 0) h += '<g transform="translate(' + r1(p.T[0]) + " " + r1(p.T[1]) + ") scale(.7 " + r1(sy * 100) / 100 + ')"><use href="#' + p.id + '" x="-20" y="-20" width="40" height="40"/></g>';
+          }
+        } else if (d < .75) {
+          var bx = p.T[0] + p.out[0] * 100 * d, by = p.T[1] + p.out[1] * 50 * d - 70 * d + 300 * d * d;
+          h += sticker(p.id, bx, by, .62, p.spin + 400 * d, 1 - d / .75);
+        }
+      }
+    });
+    g.innerHTML = h;
+    raf = on ? requestAnimationFrame(frame) : 0;
+  }
+  var hero = document.querySelector(".hero");
+  if ("IntersectionObserver" in window) {
+    new IntersectionObserver(function(es){ es.forEach(function(en){ on = en.isIntersecting; if (on && !raf) { t0 = 0; next = .3; shots = []; raf = requestAnimationFrame(frame); } }); }).observe(hero);
+  } else raf = requestAnimationFrame(frame);
+})();
+
+/* ---------- scene 2: tap a guarded app, the shield rises (loops while in view) ---------- */
+(function(){
+  var sec = $("urge"), timers = [], live = false;
+  if (RM) return; /* reduced motion: the shield stands */
+  function clear(){ timers.forEach(clearTimeout); timers = []; }
+  function cycle(){
+    sec.setAttribute("data-s", "home");
+    timers.push(setTimeout(function(){ sec.setAttribute("data-s", "tap"); }, 1100));
+    timers.push(setTimeout(function(){ sec.setAttribute("data-s", "shield"); }, 1600));
+    timers.push(setTimeout(function(){ if (live) cycle(); }, 6200));
+  }
+  if ("IntersectionObserver" in window) {
+    new IntersectionObserver(function(es){ es.forEach(function(en){
+      if (en.isIntersecting && !live) { live = true; cycle(); }
+      else if (!en.isIntersecting && live) { live = false; clear(); sec.setAttribute("data-s", "shield"); }
+    }); }, { threshold:.45 }).observe(sec);
+  }
+})();
+
+/* ---------- scene 3: press and hold to cross, or stay ---------- */
+(function(){
+  var sec = $("cross"), btn = $("holdBtn"), ring = $("holdRing"), stat = $("crossStatus"), C = M.cross || {}, U = (M.ui && M.ui.challenge) || {};
+  var LEN = 590.6, HOLD = 1500, start = 0, raf = 0, tick = 0, left = 299;
+  if (U.hold) btn.setAttribute("aria-label", U.hold);
+  function set(s){ sec.setAttribute("data-s", s); }
+  function fmt(n){ return Math.floor(n / 60) + ":" + ("0" + (n % 60)).slice(-2); }
+  function untilText(){ var d = new Date(Date.now() + 5 * 60000); return (U.until || "until") + " " + ("0" + d.getHours()).slice(-2) + ":" + ("0" + d.getMinutes()).slice(-2); }
+  function prog(p){ ring.style.transition = "none"; ring.setAttribute("stroke-dashoffset", r1(LEN * (1 - p))); }
+  function release(){
+    if (!start) return;
+    start = 0; cancelAnimationFrame(raf); btn.classList.remove("down");
+    ring.style.transition = ""; ring.setAttribute("stroke-dashoffset", LEN);
+  }
+  function crossed(){
+    start = 0; cancelAnimationFrame(raf); btn.classList.remove("down");
+    set("open"); stat.textContent = C.crossed || "";
+    left = 299; $("openCount").textContent = fmt(left); $("openUntil").textContent = untilText();
+    clearInterval(tick);
+    tick = setInterval(function(){ left = Math.max(0, left - 1); $("openCount").textContent = fmt(left); }, 1000);
+  }
+  function step(now){
+    var p = Math.min(1, (now - start) / HOLD);
+    prog(p);
+    if (p >= 1) return crossed();
+    raf = requestAnimationFrame(step);
+  }
+  function press(){
+    if (sec.getAttribute("data-s") !== "toll" || start) return;
+    if (RM) { crossed(); return; }
+    start = performance.now(); btn.classList.add("down"); raf = requestAnimationFrame(step);
+  }
+  btn.addEventListener("pointerdown", function(e){ e.preventDefault(); try { btn.setPointerCapture(e.pointerId); } catch (x) {} press(); });
+  ["pointerup", "pointercancel", "lostpointercapture"].forEach(function(ev){ btn.addEventListener(ev, release); });
+  btn.addEventListener("keydown", function(e){ if ((e.key === " " || e.key === "Enter") && !e.repeat) { e.preventDefault(); press(); } });
+  btn.addEventListener("keyup", function(e){ if (e.key === " " || e.key === "Enter") release(); });
+  btn.addEventListener("contextmenu", function(e){ e.preventDefault(); });
+  function stay(){ if (sec.getAttribute("data-s") !== "toll") return; release(); set("stay"); stat.textContent = C.stayed || ""; }
+  var sb = $("stayBtn");
+  sb.addEventListener("click", stay);
+  sb.addEventListener("keydown", function(e){ if (e.key === "Enter" || e.key === " ") { e.preventDefault(); stay(); } });
+  $("againBtn").addEventListener("click", function(){
+    clearInterval(tick); set("toll"); stat.textContent = "";
+    ring.style.transition = "none"; ring.setAttribute("stroke-dashoffset", LEN);
+    try { btn.focus({ preventScroll:true }); } catch (x) {}
+  });
+  document.addEventListener("keydown", function(e){ if (e.key === "Escape" && sec.getAttribute("data-s") !== "toll") $("againBtn").click(); });
+})();
+
+/* ---------- scene 4: bars rise when the screen comes into view ---------- */
+(function(){
+  var sec = $("insights");
+  if (RM || !("IntersectionObserver" in window)) { sec.classList.add("in"); return; }
+  new IntersectionObserver(function(es, ob){ es.forEach(function(en){ if (en.isIntersecting) { sec.classList.add("in"); ob.disconnect(); } }); }, { threshold:.35 }).observe(sec);
+})();
+})();
+</script>
+</body>
+</html>

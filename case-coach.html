@@ -5,9 +5,10 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="color-scheme" content="dark">
 <title>case coach</title>
-<meta name="description" content="case coach: a spoken case-interview coach. One interviewer, a desk, paper.">
+<meta name="description" content="case coach: a case-interview coach you talk to. An interviewer runs a whole case out loud, drills train each skill, a debrief names the moment it slipped.">
 <link rel="icon" href="case-coach-favicon.svg" type="image/svg+xml">
 <script src="copy.js"></script>
+<script src="copy-coach.js"></script>
 <script>(function(){var r=document.documentElement;r.classList.add('js');try{if(!matchMedia('(prefers-reduced-motion: reduce)').matches)r.classList.add('entering');}catch(e){}})();</script>
 <style>
 /* case coach's own tokens (case-coach web/style.css). Dark only, on purpose: the room at night, the only light object is paper,
@@ -36,9 +37,14 @@ body{margin:0;background:var(--bg);color:var(--ink);font:400 15px/1.45 var(--san
 :focus{outline:none}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 a{color:inherit}
-h1,h2,p,ol{margin:0;padding:0}
+h1,h2,p,ol,ul{margin:0;padding:0}
 b,strong{font-weight:600}
 [hidden]{display:none!important}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.picker.pre .st{opacity:0}
+.ring-pen{stroke-dasharray:100;stroke-dashoffset:0}
+.dpanel.play .ring-pen{animation:penring .5s ease-out 1.8s both}
+@keyframes penring{from{stroke-dashoffset:100}to{stroke-dashoffset:0}}
 .wrap{max-width:calc(1224px + 2 * var(--gut));margin:0 auto;padding:0 var(--gut)}
 
 /* controls: one rule, heights 32 / 40 / 48, radius 10; brass only for the one primary */
@@ -117,7 +123,15 @@ kbd{font:400 12px/1.5 var(--mono);color:var(--ink);background:var(--panel2);bord
 h1{display:flex;align-items:center;gap:.22em;font:600 clamp(44px,5.6vw,96px)/1 var(--sans);letter-spacing:-.04em;white-space:nowrap}
 h1 .mk{width:.56em;height:.56em;flex:none}
 @media (max-width:359px){h1{white-space:normal;text-wrap:balance}}
-.tagline{font-size:clamp(22px,2vw,30px);line-height:1.25;letter-spacing:-.4px;max-width:18ch;text-wrap:balance}
+.tagline{font-size:clamp(22px,2vw,30px);line-height:1.25;letter-spacing:-.4px;max-width:22ch;text-wrap:balance}
+/* who it is for, how it works: one plain sentence each, the three steps link to where each one is shown */
+.who-for{font-size:18px;line-height:1.4;color:var(--ink);max-width:34ch;text-wrap:pretty}
+.how{list-style:none;margin:4px 0 0;padding:0;display:grid;gap:2px;counter-reset:how}
+.how a{display:grid;grid-template-columns:28px minmax(0,1fr);align-items:center;gap:12px;min-height:40px;color:var(--mute);text-decoration:none;font-size:15px;line-height:1.3;border-radius:10px;transition:color .12s}
+.how a::before{counter-increment:how;content:counter(how);width:24px;height:24px;border:1.5px solid var(--line2);border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:var(--ink)}
+.how li:first-child a::before{border-color:var(--accent);color:var(--accent)}
+@media (hover:hover) and (pointer:fine){.how a:hover{color:var(--ink)}}
+.how-lbl{font-size:13px;color:var(--dim-ink);margin-top:8px}
 /* the fact, one line per thing you need: her voice, your headphones, paper and pen */
 .facts{list-style:none;margin:12px 0 0;padding:16px 0 0;border-top:1px solid var(--line);display:grid;gap:10px}
 .facts li{display:flex;align-items:center;gap:12px;font-size:15px;color:var(--mute)}
@@ -127,7 +141,8 @@ h1 .mk{width:.56em;height:.56em;flex:none}
 .nm{margin-top:clamp(20px,4vh,36px);font-weight:600;color:var(--mute);font-size:15px}
 .line{margin-top:20px;max-width:720px;min-height:2.6em;letter-spacing:-.3px;line-height:1.3;text-wrap:balance}
 .line[data-size=s]{font-size:36px}.line[data-size=m]{font-size:28px}.line[data-size=l]{font-size:22px}.line[data-size=xl]{font-size:18px}
-.clk{position:absolute;top:0;right:0;color:var(--dim-ink);font-size:15px}
+.clk{position:absolute;top:0;right:0;color:var(--dim-ink);font-size:15px;display:flex;align-items:baseline;gap:6px}
+.clk small{font-size:12px}
 .ctls{margin-top:24px;display:flex;gap:8px;flex-wrap:wrap;justify-content:center;transition:opacity .24s ease-out}
 @media (hover:hover) and (pointer:fine){.room.rest .ctls:not(:focus-within){opacity:0}}
 @media (pointer:coarse){.ctl kbd{display:none}} /* no keyboard on a phone: the keys stay on the desktop */
@@ -141,7 +156,8 @@ h1 .mk{width:.56em;height:.56em;flex:none}
   .entering .room .line{animation:fadein .2s ease-out .5s both}
   .entering .lockup h1{animation:rise .42s var(--expo) .62s both}
   .entering .lockup .tagline{animation:rise .42s var(--expo) .72s both}
-  .entering .lockup .facts{animation:rise .42s var(--expo) .8s both}
+  .entering .lockup .who-for,.entering .lockup .how-lbl,.entering .lockup .how{animation:rise .42s var(--expo) .8s both}
+  .entering .lockup .facts{animation:rise .42s var(--expo) .88s both}
   .entering .top,.entering .room .clk,.entering .room .pp{animation:fadein .3s ease-out .86s both}
   .entering .room .ctls{animation:fadein .3s ease-out .95s both}
 }
@@ -182,7 +198,7 @@ h1 .mk{width:.56em;height:.56em;flex:none}
 /* ---- sections: each one a slice of the room ---- */
 .sec{padding-top:128px;scroll-margin-top:16px}
 .sec-h{display:flex;flex-direction:column;gap:8px;margin-bottom:32px}
-.sec-h h2{font:600 28px/1.15 var(--sans);letter-spacing:-.3px;text-wrap:balance}
+.sec-h h2{font:600 28px/1.15 var(--sans);letter-spacing:-.3px;text-wrap:balance;max-width:30ch}
 .lede{font-size:18px;line-height:1.4;color:var(--mute);max-width:52ch;text-wrap:pretty}
 .frame{position:relative;border:1px solid var(--line);border-radius:14px;background:var(--bg)}
 @media (max-width:759px){.sec{padding-top:88px}.sec-h{margin-bottom:24px}.lede{font-size:15px}}
@@ -346,6 +362,137 @@ h1 .mk{width:.56em;height:.56em;flex:none}
 .door-calm{color:var(--mute);font-size:15px}
 @media (max-width:759px){.door{padding:20px 16px 28px;gap:24px}.door-line{font-size:28px;min-height:3.45em}.sheet-line{font-size:15px;grid-template-columns:24px minmax(0,1fr) auto}.door-act .btn{width:100%;min-width:0}.door-when{margin-left:0;flex-basis:100%}.door-who{flex-wrap:wrap}}
 
+/* ---- prep pack: the countdown on the left, the pack on paper ---- */
+.door-who.count{display:flex;flex-direction:column;align-items:flex-start;gap:6px}
+.count-n{display:flex;align-items:baseline;gap:10px}
+.count-n b{font:600 clamp(64px,7vw,96px)/.9 var(--sans);letter-spacing:-.04em}
+.count-n span{font-size:22px;color:var(--mute)}
+.count-what{font-size:18px;line-height:1.35}
+.count-when{font-size:13px;color:var(--dim-ink)}
+.door .door-line{font-size:22px;font-weight:400;min-height:0;color:var(--mute)}
+@media (min-width:1000px){.door .door-line{font-size:22px;min-height:2.6em}}
+@media (max-width:759px){.door .door-line{font-size:18px;min-height:0}}
+
+/* ---- drills: one drill type at a time, the ask on the dark, what comes back on paper ---- */
+.picker{padding:0 0 32px;overflow:hidden}
+.dtabs{display:flex;flex-wrap:wrap;gap:0 4px;padding:8px 24px 0;border-bottom:1px solid var(--line)}
+.dtab{appearance:none;position:relative;display:inline-flex;align-items:center;gap:8px;min-height:48px;padding:0 12px;background:none;border:0;color:var(--mute);font:400 15px/1 var(--sans);cursor:pointer;transition:color .12s}
+.dtab svg{width:18px;height:18px;flex:none}
+.dtab::after{content:"";position:absolute;left:12px;right:12px;bottom:-1px;height:2px;background:var(--accent);transform:scaleX(0);transition:transform .24s var(--expo)}
+.dtab[aria-selected=true]{color:var(--ink)}
+.dtab[aria-selected=true]::after{transform:none}
+.dtab[aria-selected=true] svg{color:var(--accent)}
+@media (hover:hover) and (pointer:fine){.dtab:hover{color:var(--ink)}}
+.dmeta{display:flex;flex-wrap:wrap;gap:8px 24px;padding:16px 24px 0;font-size:13px;color:var(--dim-ink)}
+.dmeta span{display:inline-flex;align-items:center;gap:6px}
+.dmeta svg{width:16px;height:16px;color:var(--mute)}
+.dpanel{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:32px;padding:24px 24px 0;align-items:start}
+.dask{display:flex;flex-direction:column;gap:16px;min-width:0}
+.dq{display:flex;align-items:center;gap:12px}
+.dq .who{width:48px}
+.dq .nm{margin:0;font-size:13px}
+.dprompt{font-size:22px;line-height:1.3;letter-spacing:-.3px;text-wrap:pretty}
+.dtime{display:flex;align-items:center;gap:12px;font-size:13px;color:var(--dim-ink)}
+.dtime i{flex:1;height:2px;background:var(--line);overflow:hidden;position:relative}
+.dtime i::after{content:"";position:absolute;inset:0;background:var(--dim-ink);transform-origin:left;transform:scaleX(.18)}
+.dpanel.play .dtime i::after{animation:drainto 2s linear both}
+@keyframes drainto{from{transform:scaleX(1)}to{transform:scaleX(.18)}}
+.dyou{display:flex;flex-direction:column;gap:8px;padding-top:16px;border-top:1px solid var(--line)}
+.dlab{font-size:13px;font-weight:600;color:var(--good)}
+.dyou p,.dyou li{font-size:18px;line-height:1.4}
+.dyou ol{list-style:none;display:grid;gap:6px}
+.dyou ol li{display:grid;grid-template-columns:24px minmax(0,1fr);gap:8px;align-items:baseline}
+.dyou ol li span{font-size:13px;color:var(--dim-ink)}
+.dfacts{list-style:none;display:grid;gap:8px;font-size:15px;color:var(--mute)}
+.dfacts li{display:grid;grid-template-columns:16px minmax(0,1fr);gap:8px}
+.dfacts li::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--dim);margin-top:.5em}
+.dpaper .sheet{display:flex;flex-direction:column;gap:16px}
+.focal{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.focal-n{display:flex;align-items:baseline;gap:4px}
+.focal-n b{font-size:44px;line-height:1;letter-spacing:-.04em}
+.focal-n span{font-size:13px;color:var(--pmute)}
+.focal-w{font-size:28px;font-weight:600;letter-spacing:-.3px;line-height:1.1}
+.focal-w.good{color:var(--p-good)}.focal-w.bad{color:#9a4a42}.focal-w.warn{color:#8a5a14}
+.segs{display:flex;gap:4px}
+.segs i{width:20px;height:6px;border-radius:2px;background:var(--rule)}
+.segs i.on{background:var(--p-good)}
+.segs.mid i.on{background:#b07a24}
+.segs.low i.on{background:#9a4a42}
+.fline{font-size:18px;line-height:1.4;flex-basis:100%}
+.fix{display:flex;flex-direction:column;gap:4px;border-top:1px solid var(--rule);padding-top:12px}
+.fix p{font-size:18px;line-height:1.4}
+.dpart{display:flex;flex-direction:column;gap:8px;border-top:1px solid var(--rule);padding-top:12px}
+.marks{list-style:none;display:grid;gap:8px}
+.marks li{display:grid;grid-template-columns:24px minmax(0,1fr) auto;gap:10px;align-items:center;font-size:15px;line-height:1.35}
+.marks li em{font-style:normal;font-size:13px;color:var(--pmute)}
+.mk-g{width:22px;height:22px;border:1.5px solid currentColor;border-radius:50%;display:inline-flex;align-items:center;justify-content:center}
+.mk-g svg{width:12px;height:12px}
+.mk-g path{stroke-dasharray:15;stroke-dashoffset:0}
+.dpanel.play .mk-g path{animation:pen .3s ease-out both;animation-delay:calc(var(--i,0) * 160ms + 1.9s)}
+.m-hit .mk-g{color:var(--chart)}
+.m-part .mk-g{color:#8a5a14}
+.m-miss .mk-g{color:#9a4a42}
+.m-miss{color:#4a3a36}
+.traps{list-style:none;display:grid;gap:6px;font-size:15px;color:#3a3f47}
+.traps li{display:grid;grid-template-columns:16px minmax(0,1fr);gap:8px}
+.traps li::before{content:"";width:8px;height:8px;border:1.5px solid #9a4a42;transform:rotate(45deg);margin-top:.4em}
+.ans2{display:flex;gap:32px;flex-wrap:wrap}
+.ans2 div{display:flex;flex-direction:column;gap:2px}
+.ans2 b{font-size:28px;letter-spacing:-.3px}
+.ans2 .wrong b{color:#9a4a42;text-decoration:line-through;text-decoration-thickness:2px}
+.steps{padding-left:20px;display:grid;gap:4px;font-size:15px}
+.trick{font-size:18px;line-height:1.4}
+.fam{font-size:13px;color:var(--dim-ink);line-height:1.5}
+.band2{position:relative;height:56px;margin-top:4px}
+.band2 .axis{position:absolute;left:0;right:0;top:24px;height:2px;background:var(--rule)}
+.band2 .ok{position:absolute;top:18px;height:14px;background:rgba(61,116,86,.18);border:1px solid var(--p-good);border-radius:2px}
+.band2 .you{position:absolute;top:13px;width:24px;height:24px;margin-left:-12px;border-radius:50%;background:var(--paperink);border:3px solid var(--paper)}
+.band2 .tk{position:absolute;top:40px;font-size:12px;color:var(--pmute);transform:translateX(-50%);white-space:nowrap}
+.band2 .tk:first-of-type{transform:none}
+.band2 .tk.end{transform:translateX(-100%)}
+.mini{background:var(--paper);color:var(--paperink);border:1px solid var(--edge);border-radius:4px;padding:16px}
+.mini b{display:block;font-size:13px;margin-bottom:8px}
+.mini svg{display:block;width:100%;height:auto}
+.mini table{width:100%;border-collapse:collapse;font-size:15px}
+.mini th{text-align:right;font-size:12px;font-weight:600;color:var(--pmute);padding:0 0 6px;border-bottom:2px solid var(--paperink)}
+.mini th:first-child,.mini td:first-child{text-align:left}
+.mini td{text-align:right;padding:8px 0;border-bottom:1px solid var(--rule)}
+.mini tr.tot td{font-weight:600;border-bottom:0}
+.probe{font-size:15px;color:#3a3f47}
+.dpanel .droom{border:1px solid var(--line);border-radius:14px;min-height:440px;padding:32px 16px 64px;position:relative;overflow:hidden}
+@media (prefers-reduced-motion:no-preference){
+  .dpanel.play .st{animation:drise .36s var(--expo) both;animation-delay:calc(var(--i,0) * 1ms)}
+  @keyframes drise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+}
+.weak{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:32px;align-items:start;margin-top:24px;padding:24px}
+.weak-h{display:flex;flex-direction:column;gap:6px}
+.weak-h b{font-size:15px}
+.weak-h p{font-size:15px;color:var(--mute);max-width:36ch}
+.wrows{list-style:none;display:grid;gap:4px}
+.wrow{display:grid;grid-template-columns:minmax(0,10em) minmax(0,1fr) 3.5em auto;gap:16px;align-items:center;min-height:44px;font-size:15px}
+.wrow small{display:block;font-size:12px;color:var(--dim-ink)}
+.wbar{height:6px;border-radius:3px;background:var(--panel2);overflow:hidden}
+.wbar i{display:block;height:100%;border-radius:3px;background:var(--bad)}
+.wbar i.mid{background:var(--warn)}
+.wpct{text-align:right;color:var(--mute)}
+.weak-act{margin-top:8px}
+@media (max-width:999px){
+  .dpanel{grid-template-columns:minmax(0,1fr);gap:24px}
+  .weak{grid-template-columns:minmax(0,1fr);gap:16px}
+}
+@media (max-width:759px){
+  .dtabs{padding:4px 8px 0;gap:0}
+  .dtab{padding:0 10px;font-size:13px;min-height:44px}
+  .dtab::after{left:10px;right:10px}
+  .dmeta{padding:12px 16px 0}
+  .dpanel{padding:16px 16px 0}
+  .dprompt{font-size:18px}
+  .weak{padding:16px}
+  .wrow{grid-template-columns:minmax(0,1fr) 3em auto;gap:4px 12px}
+  .wrow .wbar{grid-column:1/-1;grid-row:2}
+  .ans2 b{font-size:22px}
+}
+
 /* ---- foot ---- */
 footer{margin-top:128px;border-top:1px solid var(--line)}
 .foot{display:flex;align-items:center;gap:12px 24px;flex-wrap:wrap;padding-top:24px;padding-bottom:48px;color:var(--dim-ink);font-size:13px}
@@ -363,7 +510,7 @@ footer{margin-top:128px;border-top:1px solid var(--line)}
   <div class="wrap">
     <a class="btn small" href="index.html" aria-label="Back to Rayane's bench" data-copy-aria="caseCoach.back">
       <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3.5 L5.5 8 L10 12.5"/></svg><span data-copy="site.bench">Bench</span></a>
-    <nav aria-label="Sections"><a href="#exhibit" data-copy="caseCoach.nav.exhibit">Exhibit</a><a href="#maths" data-copy="caseCoach.nav.maths">Maths</a><a href="#verdict" data-copy="caseCoach.nav.verdict">Verdict</a><a href="#tonight" data-copy="caseCoach.nav.tonight">Tonight</a></nav>
+    <nav aria-label="Sections"><a href="#exhibit" data-copy="caseCoach.nav.exhibit">Exhibits</a><a href="#verdict" data-copy="caseCoach.nav.verdict">Debrief</a><a href="#drills" data-copy="caseCoach.nav.drills">Drills</a><a href="#prep" data-copy="caseCoach.nav.prep">Prep pack</a></nav>
   </div>
 </header>
 
@@ -372,15 +519,17 @@ footer{margin-top:128px;border-top:1px solid var(--line)}
   <div class="wrap">
     <div class="lockup">
       <h1><svg class="mk" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="12.5" fill="none" stroke="#d9b15c" stroke-width="2.4"/></svg><span data-copy="caseCoach.title">case coach</span></h1>
-      <p class="tagline" data-copy="caseCoach.tagline">Case interviews, practised out loud.</p>
-      <ul class="facts">
-        <li><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M4 8v4M7.3 5v10M10.6 7v6M13.9 4v12M17 8.5v3"/></svg><span data-copy="caseCoach.facts.0">Web, spoken both ways</span></li>
-        <li><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 13v-2.5a6.5 6.5 0 0 1 13 0V13"/><rect x="2.8" y="11.5" width="3.6" height="5.5" rx="1.2"/><rect x="13.6" y="11.5" width="3.6" height="5.5" rx="1.2"/></svg><span data-copy="caseCoach.facts.1">Headphones on</span></li>
-        <li><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17.5h9"/><path d="M12.6 3.4l3 3-7.8 7.8-3.6.6.6-3.6z"/></svg><span data-copy="caseCoach.facts.2">Paper and pen</span></li>
-      </ul>
+      <p class="tagline" data-copy="caseCoach.tagline"></p>
+      <p class="who-for" data-copy="caseCoach.whoFor"></p>
+      <p class="how-lbl" data-copy="caseCoach.howLabel"></p>
+      <ol class="how">
+        <li><a href="#top" data-copy="caseCoach.how.0"></a></li>
+        <li><a href="#verdict" data-copy="caseCoach.how.1"></a></li>
+        <li><a href="#drills" data-copy="caseCoach.how.2"></a></li>
+      </ol>
     </div>
     <div class="room" id="room" role="group" aria-label="Claire asks a case question" data-copy-aria="caseCoach.room.label">
-      <span class="clk" id="clk" aria-hidden="true">04:12</span>
+      <span class="clk" aria-hidden="true"><span id="clk">04:12</span><small data-copy="caseCoach.room.clock">into the case</small></span>
       <div class="who"><div class="pres" data-state="speaking" data-voice id="heroPres"></div></div>
       <p class="nm" data-copy="caseCoach.name">Claire</p>
       <p class="line" id="heroLine" data-size="m"></p>
@@ -410,26 +559,6 @@ footer{margin-top:128px;border-top:1px solid var(--line)}
   </div>
 </section>
 
-<section class="sec side" id="maths" aria-labelledby="h-ma">
-  <div class="wrap">
-    <div class="sec-h"><h2 id="h-ma" data-copy="caseCoach.maths.title">Ten quick sums</h2><p class="lede" data-copy="caseCoach.maths.lede">Said out loud, answered out loud. Three right in a row and the dots join up.</p></div>
-    <div class="frame droom" id="droom" role="group" aria-label="Maths drill" data-copy-aria="caseCoach.maths.label">
-      <div class="drill" id="drill">
-        <div class="who"><div class="pres" data-state="speaking" data-voice id="drillPres"></div></div>
-        <p class="nm" data-copy="caseCoach.name">Claire</p>
-        <p class="sum" id="sum"></p>
-        <p class="ans" id="ans"></p>
-        <div class="chain" id="chain"></div>
-      </div>
-      <div class="dend" id="dend">
-        <div class="score"><svg viewBox="0 0 132 132" aria-hidden="true"><circle class="bg" cx="66" cy="66" r="60" fill="none" stroke-width="4"/><circle class="arc" id="arc" cx="66" cy="66" r="60" fill="none" stroke-width="4" stroke-linecap="round" transform="rotate(-90 66 66)" stroke-dasharray="377" stroke-dashoffset="377"/></svg><div class="fig"><b data-copy="caseCoach.maths.score">8</b><span data-copy="caseCoach.maths.of">/10</span></div></div>
-        <div class="chain" id="chainEnd"></div>
-        <div class="drainbar"><i></i></div>
-      </div>
-      <button class="btn glyph pp" type="button" data-pause="drill"></button>
-    </div>
-  </div>
-</section>
 
 <section class="sec" id="verdict" aria-labelledby="h-db">
   <div class="wrap">
@@ -445,15 +574,51 @@ footer{margin-top:128px;border-top:1px solid var(--line)}
   </div>
 </section>
 
-<section class="sec" id="tonight" aria-labelledby="h-tn">
+<section class="sec" id="drills" aria-labelledby="h-dr">
   <div class="wrap">
-    <div class="sec-h"><h2 id="h-tn" data-copy="caseCoach.tonight.title">Tonight's plan</h2><p class="lede" data-copy="caseCoach.tonight.lede">Three lines at most. Each one gets a tick in pen.</p></div>
+    <div class="sec-h"><h2 id="h-dr" data-copy="caseCoach.drills.title"></h2><p class="lede" data-copy="caseCoach.drills.lede"></p></div>
+    <div class="frame picker" id="picker">
+      <div class="dtabs" role="tablist" aria-label="Drill types" data-copy-aria="caseCoach.drills.label" id="dtabs"></div>
+      <div class="dmeta" id="dmeta"></div>
+      <div id="dpanels"></div>
+      <div class="dpanel" role="tabpanel" id="dp-maths" aria-labelledby="dt-maths" hidden>
+        <div class="dask">
+        <div class="droom" id="droom" role="group" aria-label="Maths drill" data-copy-aria="caseCoach.maths.label">
+      <div class="drill" id="drill">
+        <div class="who"><div class="pres" data-state="speaking" data-voice id="drillPres"></div></div>
+        <p class="nm" data-copy="caseCoach.name">Claire</p>
+        <p class="sum" id="sum"></p>
+        <p class="ans" id="ans"></p>
+        <div class="chain" id="chain"></div>
+      </div>
+      <div class="dend" id="dend">
+        <div class="score"><svg viewBox="0 0 132 132" aria-hidden="true"><circle class="bg" cx="66" cy="66" r="60" fill="none" stroke-width="4"/><circle class="arc" id="arc" cx="66" cy="66" r="60" fill="none" stroke-width="4" stroke-linecap="round" transform="rotate(-90 66 66)" stroke-dasharray="377" stroke-dashoffset="377"/></svg><div class="fig"><b data-copy="caseCoach.maths.score">8</b><span data-copy="caseCoach.maths.of">/10</span></div></div>
+        <div class="chain" id="chainEnd"></div>
+        <div class="drainbar"><i></i></div>
+      </div>
+      <button class="btn glyph pp" type="button" data-pause="drill"></button>
+        </div>
+        </div>
+        <div class="dpaper sheet-stack st" style="--i:300"><div class="sheet-under"></div><div class="sheet" id="mathsMiss"></div></div>
+      </div>
+    </div>
+    <div class="frame weak" id="weak"></div>
+  </div>
+</section>
+
+<section class="sec" id="prep" aria-labelledby="h-pp">
+  <div class="wrap">
+    <div class="sec-h"><h2 id="h-pp" data-copy="caseCoach.prep.title"></h2><p class="lede" data-copy="caseCoach.prep.lede"></p></div>
     <div class="frame door" id="door">
-      <div class="door-who"><div class="who"><div class="pres sm" data-state="thinking" id="doorPres"></div></div><span class="door-name" data-copy="caseCoach.name">Claire</span><span class="door-when" data-copy="caseCoach.tonight.when">12 days to the final round</span></div>
+      <div class="door-who count">
+        <p class="count-n"><b data-copy="caseCoach.prep.days"></b><span data-copy="caseCoach.prep.unit"></span></p>
+        <p class="count-what" data-copy="caseCoach.prep.what"></p>
+        <p class="count-when" data-copy="caseCoach.prep.when"></p>
+      </div>
       <p class="door-line"><span id="doorRest"></span></p>
       <div class="sheet-stack"><div class="sheet-under"></div>
         <div class="sheet">
-          <p class="sheet-h"><b class="lab" data-copy="caseCoach.tonight.sheet">Today</b><span data-copy="caseCoach.tonight.total">46 min</span></p>
+          <p class="sheet-h"><b class="lab" data-copy="caseCoach.prep.sheet"></b><span data-copy="caseCoach.prep.total"></span></p>
           <ol class="sheet-lines" id="plan"></ol>
         </div>
       </div>
@@ -500,6 +665,122 @@ function faceSVG(){
     '<g class="f-brows" fill="none" stroke="#2b211c" stroke-width="2.2" stroke-linecap="round"><path d="M-22 -16 Q-14 -20 -6 -16"/><path d="M6 -16 Q14 -20 22 -16"/></g>' +
     eye(-14) + eye(14) + '<path d="M0 0 Q-3 10 -1 14" stroke="#a77a60" stroke-width="1.4" fill="none"/><ellipse class="f-mouth" cy="22" rx="8" ry="1.2" fill="#5a2c2c"/></g></g></g></g></svg>';
 }
+/* ================= DRILLS: one drill type at a time (built before the faces are drawn) ================= */
+var DR = C.drills, KD = DR.kinds, ORDER = ["framework", "maths", "sizing", "charts", "exhibits", "synthesis", "fit"];
+var GLYPH = {
+  framework: '<path d="M10 3v4M10 7H4.5v4M10 7h5.5v4M4.5 11v5M15.5 11v5M10 7v9"/>',
+  maths: '<path d="M3.5 5.5h6M6.5 2.5v6M12 3l4.5 4.5M16.5 3L12 7.5M3.5 14h6M12 12.5h4.5M12 15.5h4.5"/>',
+  sizing: '<path d="M2.5 4h15l-5.5 6.5V16l-4-2v-3.5z"/>',
+  charts: '<path d="M4 16V10M8 16V5M12 16v-4M16 16V8M2.5 16.5h15"/>',
+  exhibits: '<rect x="4" y="2.5" width="12" height="15" rx="1"/><path d="M6.5 7h7M6.5 10h7M6.5 13h4.5"/>',
+  synthesis: '<path d="M3 4l6.5 6L3 16M9.5 10h8M14.5 7l3 3-3 3"/>',
+  fit: '<circle cx="8" cy="6.5" r="3"/><path d="M2.5 17c0-3.2 2.4-5.5 5.5-5.5s5.5 2.3 5.5 5.5M14.5 4.5c1 .9 1.6 2 1.6 3.3s-.6 2.4-1.6 3.3"/>'
+};
+var ICO = function(d){ return '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + d + '</svg>'; };
+var MI = {
+  time: '<circle cx="10" cy="11" r="6.5"/><path d="M10 7.5V11l2.5 1.5M8 2.5h4"/>',
+  level: '<path d="M4 16v-3M8 16V9.5M12 16V6M16 16V3"/>',
+  source: '<path d="M5 2.5h7l3.5 3.5v11.5H5z"/><path d="M12 2.5V6h3.5"/>'
+};
+var MK = {
+  hit: '<path d="M3 8.5l3 3 7-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>',
+  part: '<path d="M3.5 8h9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
+  miss: '<path d="M4.5 4.5l7 7M11.5 4.5l-7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>'
+};
+var sti = function(i){ return ' st" style="--i:' + i + '"'; };
+function markLI(name, kind, note, i){
+  return '<li class="m-' + kind + '"><span class="mk-g" style="--i:' + i + '"><svg viewBox="0 0 16 16" aria-hidden="true">' + MK[kind] + '</svg></span><span>' + esc(name) +
+    '<span class="sr"> (' + esc(DR.marks[kind]) + ')</span></span>' + (note ? '<em>' + esc(note) + '</em>' : '<em></em>') + '</li>';
+}
+function focal(k){
+  var top = k.verdict ? '<span class="focal-w good">' + esc(k.verdict) + '</span>' :
+    '<span class="focal-n"><b>' + k.score + '</b><span>' + esc(DR.of) + '</span></span><span class="segs' + (k.score >= 4 ? "" : k.score >= 3 ? " mid" : " low") + '" aria-hidden="true">' +
+    [1, 2, 3, 4, 5].map(function(n){ return '<i' + (n <= k.score ? ' class="on"' : "") + '></i>'; }).join("") + '</span>';
+  return '<div class="focal">' + top + '<p class="fline">' + esc(k.line) + '</p></div><div class="fix"><span class="lab">' + esc(DR.fixLabel) + '</span><p>' + esc(k.fix) + '</p></div>';
+}
+function part(label, inner){ return '<div class="dpart"><span class="lab">' + esc(label) + '</span>' + inner + '</div>'; }
+function parts(list){ return '<ul class="marks">' + list.map(function(x, i){ return markLI(x[0], x[1], "", i); }).join("") + '</ul>'; }
+function ask(k, extra, you){
+  return '<div class="dask"><div class="dq' + sti(0) + '><div class="who"><div class="pres sm" data-state="speaking"></div></div><p class="nm">' + esc(C.name) + '</p></div>' + (extra || "") +
+    '<p class="dprompt' + sti(120) + '>' + esc(k.prompt) + '</p><div class="dtime' + sti(200) + '><span>' + esc(k.time) + '</span><i></i></div>' +
+    '<div class="dyou' + sti(1500) + '><span class="dlab">' + esc(DR.you) + '</span>' + you + '</div></div>';
+}
+var paperD = function(inner){ return '<div class="dpaper sheet-stack' + sti(1900) + '><div class="sheet-under"></div><div class="sheet">' + inner + '</div></div>'; };
+var said = function(t){ return '<p>' + esc(t) + '</p>'; };
+var numbered = function(list){ return '<ol>' + list.map(function(b, i){ return '<li><span>' + (i + 1) + '</span>' + esc(b) + '</li>'; }).join("") + '</ol>'; };
+function miniChart(k){
+  var rows = X.chart.rows, kx = 170 / 61, q = "";
+  rows.forEach(function(r, i){
+    var gy = 8 + i * 48;
+    q += '<text x="12" y="' + (gy + 19) + '" font-size="13" fill="#1d2026">' + esc(r[0]) + '</text>';
+    [[r[1], "#8a8f99", gy + 4], [r[2], "#3f6196", gy + 20]].forEach(function(b){
+      q += '<rect x="110" y="' + b[2] + '" width="' + (b[0] * kx).toFixed(1) + '" height="13" fill="' + b[1] + '"/><text x="' + (116 + b[0] * kx).toFixed(1) + '" y="' + (b[2] + 11) + '" font-size="12" font-weight="600" fill="#1d2026">' + b[0] + '</text>';
+    });
+  });
+  var oy = 8 + 3 * 48;
+  q += '<rect class="ring-pen" x="2" y="' + (oy - 4) + '" width="326" height="44" rx="8" fill="none" stroke="#4a6fa5" stroke-width="2" pathLength="100"/>';
+  return '<div class="mini' + sti(60) + '><b>' + esc(k.chartTitle) + '</b><svg viewBox="0 0 330 200" role="img" aria-label="' + esc(k.chartTitle) + '">' + q + '</svg></div>';
+}
+function miniTable(k){
+  return '<div class="mini' + sti(60) + '><b>' + esc(k.tableTitle) + '</b><table><thead><tr>' + k.head.map(function(h){ return '<th>' + esc(h) + '</th>'; }).join("") + '</tr></thead><tbody>' +
+    k.rows.map(function(r, i){ return '<tr' + (i === k.rows.length - 1 ? ' class="tot"' : "") + '>' + r.map(function(c){ return '<td>' + esc(c) + '</td>'; }).join("") + '</tr>'; }).join("") + '</tbody></table></div>';
+}
+function bandHTML(k){
+  var b = k.band, pc = function(v){ return (100 * (v - b.min) / (b.max - b.min)).toFixed(1) + "%"; };
+  return '<div class="band2" role="img" aria-label="' + esc(k.bandLabel + ": " + k.ticks[1] + " to " + k.ticks[2] + ". " + k.youMark) + '"><span class="axis"></span><span class="ok" style="left:' + pc(b.lo) + ';width:calc(' + pc(b.hi) + ' - ' + pc(b.lo) + ')"></span>' +
+    '<span class="you" style="left:' + pc(b.you) + '"></span><span class="tk" style="left:0">' + esc(k.ticks[0]) + '</span><span class="tk" style="left:' + pc(b.lo) + '">' + esc(k.ticks[1]) + '</span><span class="tk" style="left:' + pc(b.hi) + '">' + esc(k.ticks[2]) + '</span><span class="tk end" style="left:100%">' + esc(k.ticks[3]) + '</span></div><p class="probe">' + esc(k.youMark) + '</p>';
+}
+var X = C.exhibit;
+var BUILD = {
+  framework: function(k){ return ask(k, "", numbered(k.yours)) + paperD(focal(k) + part(k.modelLabel, '<ul class="marks">' + k.model.map(function(m, i){ return markLI(m[0], m[1], m[2], i); }).join("") + '</ul>') +
+    part(k.firstLabel, '<p class="why">' + esc(k.first) + '</p>') + part(k.trapsLabel, '<ul class="traps">' + k.traps.map(function(t){ return '<li>' + esc(t) + '</li>'; }).join("") + '</ul>')); },
+  sizing: function(k){ return ask(k, "", numbered(k.route)) + paperD(focal(k) + part(k.bandLabel, bandHTML(k))); },
+  charts: function(k){ return ask(k, miniChart(k), said(k.you)) + paperD(focal(k) + parts(k.parts)); },
+  exhibits: function(k){ return ask(k, miniTable(k), said(k.you)) + paperD(focal(k) + parts(k.parts)); },
+  synthesis: function(k){ return ask(k, '<ul class="dfacts' + sti(60) + '>' + k.facts.map(function(f){ return '<li>' + esc(f) + '</li>'; }).join("") + '</ul>', said(k.you)) + paperD(focal(k) + parts(k.parts)); },
+  fit: function(k){ return ask(k, "", said(k.you)) + paperD(focal(k) + parts(k.parts) + part(k.probeLabel, '<p class="why">' + esc(k.probe) + '</p>')); }
+};
+var dpanels = $("#dpanels"), dtabs = $("#dtabs"), picker = $("#picker");
+ORDER.forEach(function(id){
+  var k = KD[id];
+  dtabs.insertAdjacentHTML("beforeend", '<button class="dtab" type="button" role="tab" id="dt-' + id + '" data-k="' + id + '" aria-controls="dp-' + id + '" aria-selected="false" tabindex="-1">' + ICO(GLYPH[id]) + '<span>' + esc(k.name) + '</span></button>');
+  if (BUILD[id]) dpanels.insertAdjacentHTML("beforeend", '<div class="dpanel" role="tabpanel" id="dp-' + id + '" aria-labelledby="dt-' + id + '" hidden>' + BUILD[id](k) + '</div>');
+});
+(function(){
+  var k = KD.maths;
+  $("#mathsMiss").innerHTML = '<div class="focal"><span class="focal-w bad">' + esc(k.chip) + '</span><p class="fline">' + esc(k.q) + '</p></div>' +
+    '<div class="ans2"><div class="wrong"><span class="lab">' + esc(k.youLabel) + '</span><b>' + esc(k.you) + '</b></div><div><span class="lab">' + esc(k.answerLabel) + '</span><b>' + esc(k.answer) + '</b></div></div>' +
+    part(k.stepsLabel, '<ol class="steps">' + k.steps.map(function(x){ return '<li>' + esc(x) + '</li>'; }).join("") + '</ol>') + part(k.trickLabel, '<p class="trick">' + esc(k.trick) + '</p>');
+  $("#dp-maths .dask").insertAdjacentHTML("beforeend", '<p class="fam">' + esc(k.families) + '</p>');
+})();
+var dmeta = $("#dmeta"), dtabList = $$(".dtab", dtabs), dSeen = false;
+function selectKind(id, focus){
+  dtabList.forEach(function(t){ var on = t.dataset.k === id; t.setAttribute("aria-selected", String(on)); t.tabIndex = on ? 0 : -1; });
+  ORDER.forEach(function(k){ $("#dp-" + k).hidden = k !== id; });
+  var k = KD[id];
+  dmeta.innerHTML = '<span>' + ICO(MI.time) + esc(k.time) + '</span><span>' + ICO(MI.level) + esc(k.level) + '</span><span>' + ICO(MI.source) + esc(k.source) + '</span>';
+  var p = $("#dp-" + id);
+  clearTimeout(selectKind.t); $$(".dpanel.play", picker).forEach(function(x){ x.classList.remove("play"); });
+  if (!RM && dSeen) { restart(p, "play"); selectKind.t = setTimeout(function(){ p.classList.remove("play"); }, 2800); } /* the end state is the resting panel */
+  if (focus) $("#dt-" + id).focus();
+}
+dtabList.forEach(function(t, i){
+  t.addEventListener("click", function(){ selectKind(t.dataset.k); });
+  t.addEventListener("keydown", function(e){
+    var n = e.key === "ArrowRight" ? i + 1 : e.key === "ArrowLeft" ? i - 1 : e.key === "Home" ? 0 : e.key === "End" ? dtabList.length - 1 : null;
+    if (n === null) return; e.preventDefault(); n = (n + dtabList.length) % dtabList.length; selectKind(dtabList[n].dataset.k, true);
+  });
+});
+selectKind("framework");
+if (!RM) {
+  dSeen = true; /* the first view is the settled panel; a tab press plays its drill through */
+}
+var weak = DR.weak;
+$("#weak").innerHTML = '<div class="weak-h"><b>' + esc(weak.title) + '</b><p>' + esc(weak.text) + '</p></div><ul class="wrows">' +
+  weak.rows.map(function(r){ return '<li class="wrow"><span>' + esc(r[0]) + '<small>' + esc(r[1]) + '</small></span><span class="wbar" aria-hidden="true"><i class="' + (r[2] >= 50 ? "mid" : "") + '" style="width:' + r[2] + '%"></i></span><span class="wpct">' + r[2] + '%</span><button class="btn small" type="button" data-goto="' + r[3] + '">' + esc(weak.drill) + '</button></li>'; }).join("") + '</ul>';
+function gotoKind(id){ selectKind(id); picker.scrollIntoView({ behavior: RM ? "auto" : "smooth", block: "start" }); }
+$$("[data-goto]").forEach(function(b){ b.addEventListener("click", function(){ gotoKind(b.dataset.goto); }); });
+
 $$(".pres").forEach(function(el){ el.classList.add("ringbox"); el.innerHTML = '<div class="ring-halo"></div><div class="ring-core"></div>' + faceSVG(); });
 
 function restart(el, cls){ el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); }
@@ -750,8 +1031,8 @@ document.addEventListener("keydown", function(e){ if (e.key === "Escape" && $('[
 slip(SLIP); quiet(); // rest
 arm(debScene);
 
-/* ================= TONIGHT: the front door, ticked as you scroll (the one scroll-scrubbed scene) ================= */
-var T = C.tonight, plan = $("#plan"), doorRest = $("#doorRest"), doorAct = $("#doorAct"), door = $("#door");
+/* ================= PREP PACK: the countdown and the pack, ticked as you scroll (the one scroll-scrubbed scene) ================= */
+var T = C.prep, plan = $("#plan"), doorRest = $("#doorRest"), doorAct = $("#doorAct"), door = $("#door");
 var TICK = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5l3 3 7-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 plan.innerHTML = T.lines.map(function(l, i){
   return '<li class="sheet-line"><span class="sheet-mark">' + (i + 1) + '</span><div><div>' + esc(l.title) + '</div>' + (l.sub ? '<div class="sheet-sub">' + esc(l.sub) + '</div>' : "") + '</div><span class="sheet-min">' + esc(l.min) + '</span></li>';
@@ -769,13 +1050,10 @@ function setStage(n, animate){
   });
   doorRest.textContent = T.rest[Math.min(n, 3)];
   if (stage >= 0 && animate) restart(doorRest, "swap");
-  var fin = n >= lines.length; calm.hidden = !fin; /* Start stays: it is the way back into the room */
+  var fin = n >= lines.length; calm.hidden = !fin; startBtn.hidden = fin;
   stage = n;
 }
-startBtn.addEventListener("click", function(){
-  window.scrollTo({ top: 0, behavior: RM ? "auto" : "smooth" });
-  setTimeout(function(){ resume(); hold(hero, false); hero.seek(0); hero.playing = !RM; enter(); showUI(7400); }, RM ? 0 : 450);
-});
+startBtn.addEventListener("click", function(){ gotoKind("framework"); });
 if (RM) setStage(3, false);
 else {
   setStage(0, false);

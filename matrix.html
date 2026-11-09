@@ -1,0 +1,635 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>Prioritisation matrix</title>
+<meta name="description" content="Prioritisation matrix: a workshop tool that turns a long list of ideas into a scored matrix, a shortlist and a roadmap.">
+<link rel="icon" href="matrix-favicon.svg" type="image/svg+xml">
+<script src="copy.js"></script>
+<script src="copy-matrix.js"></script>
+<script>(function(){var r=document.documentElement;r.classList.add('js');try{if(!matchMedia('(prefers-reduced-motion: reduce)').matches)r.classList.add('entering');}catch(e){}})();</script>
+<style>
+/* The matrix's own tokens (prioritization-matrix src/original.html, the home's .w-mx): paper ground, black ink, the blue
+   #2A78D6 as the one accent, group hues from its palette. System sans, as in the tool. Light and dark follow the system. */
+:root{
+  color-scheme:light dark;
+  --g:#f9f9f7;--surf:#fcfcfb;--surf2:#f2f2ee;--i:#0b0b0b;--i2:#52514e;--mute:#898781;--grid:#e1e0d9;--axis:#c3c2b7;
+  --acc:#2a78d6;--acc-ink:#fff;--bad:#d03b3b;--toast:#111;--toast-ink:#fff;
+  --c0:#2a78d6;--c1:#eb6834;--c2:#1baf7a;
+  --t0:#e8f0fa;--t1:#fcebe2;--t2:#e3f5ee;
+  --sans:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,monospace;
+  --out:cubic-bezier(.2,.7,.2,1);--expo:cubic-bezier(.16,1,.3,1);
+  --gut:32px;
+}
+@media (prefers-color-scheme:dark){:root{
+  --g:#0d0d0d;--surf:#1a1a19;--surf2:#232321;--i:#ffffff;--i2:#c3c2b7;--mute:#8f8d86;--grid:#2c2c2a;--axis:#45453f;
+  --acc:#3987e5;--bad:#f06a6a;--toast:#f2f2ee;--toast-ink:#0b0b0b;
+  --c0:#3987e5;--c1:#d95926;--c2:#199e70;
+  --t0:#16222f;--t1:#2b1d16;--t2:#13261f;
+}}
+@media (max-width:759px){:root{--gut:16px}}
+*{box-sizing:border-box}
+html{background:var(--g);-webkit-text-size-adjust:100%}
+@media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
+body{margin:0;background:var(--g);color:var(--i);font:400 16px/1.5 var(--sans);-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums;overflow-x:hidden}
+:focus{outline:none}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+a{color:inherit}
+h1,h2,p,ol,ul{margin:0;padding:0}
+h1,h2{text-wrap:balance}
+b,strong{font-weight:600}
+[hidden]{display:none!important}
+.wrap{max-width:calc(1224px + 2 * var(--gut));margin:0 auto;padding:0 var(--gut)}
+
+/* controls: the tool's own buttons, radius 8, black when on */
+.btn{appearance:none;display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:40px;padding:0 14px;border:1px solid var(--grid);border-radius:8px;background:var(--surf);color:var(--i);font:500 14px/1 var(--sans);text-decoration:none;cursor:pointer;
+  transition:border-color .16s,background-color .16s,color .16s,transform .12s ease-out}
+@media (hover:hover) and (pointer:fine){.btn:hover{border-color:var(--axis)}}
+.btn:active{transform:scale(.97)}
+.btn.small{min-height:32px;padding:0 12px;font-size:13px}
+.btn.primary{background:var(--acc);border-color:var(--acc);color:var(--acc-ink)}
+.btn[aria-pressed=true]{background:var(--i);border-color:var(--i);color:var(--g)}
+.seg{display:inline-flex;border:1px solid var(--grid);border-radius:8px;overflow:hidden;background:var(--surf)}
+.seg button{appearance:none;border:0;background:transparent;color:var(--i);font:500 13px/1 var(--sans);min-height:30px;padding:0 12px;cursor:pointer}
+.seg button[aria-pressed=true]{background:var(--i);color:var(--g)}
+
+/* top bar */
+.top{position:absolute;left:0;right:0;top:0;z-index:5}
+.top .wrap{display:flex;align-items:center;gap:16px;min-height:72px}
+.top nav{margin-left:auto;display:flex;gap:2px}
+.top nav a{color:var(--i2);font-size:13px;min-height:32px;display:inline-flex;align-items:center;padding:0 10px;border-radius:8px;text-decoration:none;transition:color .12s,background-color .12s}
+@media (hover:hover) and (pointer:fine){.top nav a:hover{color:var(--i);background:var(--surf2)}}
+@media (max-width:899px){.top nav{display:none}}
+
+/* background grid, the tool's plot lines fading out under the hero */
+.bggrid{position:absolute;inset:0 0 auto 0;height:min(100svh,980px);z-index:0;pointer-events:none;background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:64px 64px;opacity:.5;-webkit-mask-image:linear-gradient(to bottom,#000,transparent 85%);mask-image:linear-gradient(to bottom,#000,transparent 85%)}
+
+/* hero: what, who, how on the left; the tool working on the right */
+.hero{position:relative;z-index:1;padding:104px 0 56px;min-height:min(100svh,940px);display:flex;align-items:center}
+.hero .wrap{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:48px;align-items:center;width:100%}
+.lockup h1{display:flex;align-items:center;gap:14px;font:650 clamp(36px,4.4vw,64px)/1.02 var(--sans);letter-spacing:-.035em}
+.lockup h1 .mk{width:.86em;height:.86em;flex:none}
+.three{margin-top:26px;display:grid;gap:14px;list-style:none}
+.three li{display:grid;grid-template-columns:22px 1fr;gap:12px;align-items:start;font-size:17px;line-height:1.45;color:var(--i)}
+.three svg{width:22px;height:22px;margin-top:1px;color:var(--acc)}
+.facts{margin-top:24px;display:flex;flex-wrap:wrap;gap:8px 20px;list-style:none;font-size:13px;color:var(--i2)}
+.facts li{display:inline-flex;align-items:center;gap:8px}
+.facts svg{width:16px;height:16px;color:var(--i2)}
+.golive{margin-top:26px}
+.win{background:var(--surf);border:1px solid var(--grid);border-radius:12px;box-shadow:0 1px 0 rgba(0,0,0,.02),0 18px 48px -24px rgba(0,0,0,.25);overflow:hidden}
+.win-bar{display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--grid)}
+.win-bar .sp{margin-right:auto}
+.win-bar .rp{min-height:30px;width:32px;padding:0;color:var(--i2)}
+.stage{position:relative}
+.stage svg.mx{display:block;width:100%;height:auto}
+.stage .board{padding:12px}
+@media (max-width:979px){
+  .hero{min-height:0;padding:88px 0 40px;display:block}
+  .hero .wrap{grid-template-columns:1fr;gap:28px}
+}
+@media (max-width:759px){
+  .three li{font-size:16px}
+  .lockup h1{font-size:34px}
+}
+
+/* matrix drawing (shared by every scene) */
+svg.mx text{font-family:var(--sans);fill:var(--i2)}
+svg.mx .q{font-weight:600}
+svg.mx .lbl{fill:var(--i)}
+svg.mx .dot.short .lbl{font-weight:700}
+svg.mx .dot{transition:transform .62s var(--out),opacity .3s}
+svg.mx .dot .b{transition:fill .3s,stroke .3s}
+svg.mx .dot .lbl{transition:opacity .3s}
+svg.mx .dot .ring{fill:none;stroke:var(--i);stroke-width:2.4;opacity:0;transform-box:fill-box;transform-origin:center;transform:scale(.6);transition:opacity .3s,transform .35s var(--out)}
+svg.mx .dot.short .ring{opacity:1;transform:scale(1)}
+svg.mx .lnk{fill:none;stroke:var(--i2);stroke-width:1.5;transition:stroke-dashoffset .7s ease-out,opacity .3s,stroke .2s}
+svg.mx.tracing .dot:not(.lit),svg.mx.tracing .lnk:not(.lit){opacity:.18}
+svg.mx.focus .dot:not(.short){opacity:.2}
+svg.mx.focus .lnk{opacity:.15}
+svg.mx .lnk.lit{stroke:var(--acc)}
+svg.mx .dot.grab{cursor:grab}
+svg.mx .dot.grab:active{cursor:grabbing}
+svg.mx .dot:focus-visible .b{stroke:var(--acc);stroke-width:3}
+svg.mx .dot.pick{cursor:pointer}
+svg.mx{touch-action:manipulation}
+#smx{touch-action:none}
+
+/* sections: one scene per step of the workshop */
+.step{position:relative;z-index:1;padding:88px 0}
+.step + .step{border-top:1px solid var(--grid)}
+.step .wrap{display:grid;grid-template-columns:minmax(0,4fr) minmax(0,8fr);gap:48px;align-items:start}
+.sec-h .n{display:block;font:600 13px/1 var(--sans);color:var(--acc);margin-bottom:14px;font-variant-numeric:tabular-nums}
+.sec-h h2{font:650 clamp(24px,2.3vw,32px)/1.18 var(--sans);letter-spacing:-.02em;max-width:24ch}
+.sec-h .lede{margin-top:14px;color:var(--i2);font-size:16px;line-height:1.55;max-width:44ch}
+.sec-h .hint{margin-top:18px;font-size:13px;color:var(--mute);display:flex;align-items:center;gap:8px}
+.sec-h .hint svg{width:16px;height:16px;flex:none}
+.sec-h .tools{margin-top:18px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.readout{margin-top:12px;font-size:14px;color:var(--i);min-height:21px}
+.count{font-size:13px;color:var(--i2)}
+.frame{background:var(--surf);border:1px solid var(--grid);border-radius:12px;overflow:hidden;position:relative}
+@media (max-width:979px){.step{padding:64px 0}.step .wrap{grid-template-columns:1fr;gap:24px}.sec-h h2{max-width:none}}
+
+/* collect: paste box to sheet */
+.collect{display:grid;grid-template-columns:minmax(0,5fr) 28px minmax(0,7fr);gap:14px;align-items:center;padding:20px}
+.paste{border:1px solid var(--grid);border-radius:8px;background:var(--g);padding:12px 14px;font:400 14px/1.6 var(--sans);color:var(--i2);min-height:248px}
+.plabel{font-size:12px;font-weight:600;color:var(--i2);margin:0 0 8px}
+.paste .ln{display:block;min-height:1.6em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.paste .ln.h{color:var(--i);font-weight:600}
+.flow{color:var(--axis);justify-self:center}
+.sheet{border:1px solid var(--grid);border-radius:8px;overflow:hidden;font-size:13px}
+.sheet .row{display:grid;grid-template-columns:minmax(0,1fr) 64px 84px;align-items:center;min-height:30px;padding:0 10px;border-top:1px solid var(--grid)}
+.sheet .row:first-child{border-top:0}
+.sheet .hd{background:var(--surf2);font-weight:600;color:var(--i2);font-size:12px}
+.sheet .gr{font-weight:600}
+.sheet .gr span{display:inline-flex;align-items:center;gap:8px}
+.sheet .gr i{width:9px;height:9px;border-radius:50%;display:inline-block}
+.sheet .num{text-align:right;color:var(--i2)}
+.sheet .num.u{color:var(--mute);font-style:italic;font-size:12px}
+.sheet .it{padding-left:27px}
+.collect-actions{grid-column:1;display:flex;justify-content:flex-start}
+.toast{position:absolute;left:50%;bottom:16px;transform:translate(-50%,8px);background:var(--toast);color:var(--toast-ink);font-size:13px;padding:10px 14px;border-radius:8px;white-space:nowrap;transition:transform .3s var(--out)}
+.js .collect .row.it,.js .collect .row.gr{transform:translateX(-10px);transition:transform .4s var(--out),background-color .6s}
+.on .collect .row.it,.on .collect .row.gr{transform:none}
+.on .toast{transform:translate(-50%,0);transition-delay:1.6s}
+@media (max-width:759px){.collect{grid-template-columns:1fr;padding:14px}.flow{transform:rotate(90deg)}.paste{min-height:0}.sheet .row{grid-template-columns:minmax(0,1fr) 52px 76px}}
+
+/* roadmap board: lanes per group, Now / Next / Later */
+.board{position:relative;font-size:13px}
+.bd{display:grid;grid-template-columns:minmax(84px,150px) repeat(3,minmax(0,1fr));gap:4px 0}
+.bd .ph{text-align:center;font-weight:600;color:var(--i2);padding:6px 0 8px;border-bottom:1px solid var(--grid)}
+.bd .ln{border-radius:8px 0 0 8px;padding:10px 10px;font-weight:600;display:flex;gap:8px;align-items:flex-start;line-height:1.25}
+.bd .ln i{width:9px;height:9px;border-radius:50%;flex:none;margin-top:3px}
+.bd .cell{padding:8px;display:flex;flex-direction:column;gap:8px;align-items:flex-start;min-height:58px;border-left:1px dashed var(--axis)}
+.bd .cell.c0{border-left:0}
+.bd .cell.last{border-radius:0 8px 8px 0}
+.card{background:var(--surf);border:1.5px solid currentColor;border-radius:8px;padding:6px 10px;line-height:1.25;max-width:100%;position:relative}
+.card span{color:var(--i)}
+.card .warn{position:absolute;right:-8px;top:-10px;width:18px;height:18px;color:var(--bad)}
+.js .board .card{transform:translateY(-12px);transition:transform .45s var(--expo)}
+.on .board .card,.board.on .card{transform:none}
+.board svg.over{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}
+.board svg.over path{fill:none;stroke:var(--bad);stroke-width:1.6;stroke-dasharray:5 4}
+.legend{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:12px;color:var(--i2)}
+@media (max-width:759px){.bd{grid-template-columns:86px repeat(3,minmax(0,1fr));font-size:12px}.bd .ln{padding:8px 6px;font-size:12px;flex-direction:column;gap:5px}.bd .cell{padding:6px 4px}.card{padding:5px 6px;font-size:12px}}
+
+/* export: a slide and the files */
+.exp{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:20px;padding:20px;align-items:center}
+.slide{--i:#0b0b0b;--i2:#52514e;--mute:#898781;--grid:#e1e0d9;--axis:#c3c2b7;--acc:#2a78d6;--c0:#2a78d6;--c1:#eb6834;--c2:#1baf7a;aspect-ratio:16/9;background:#fff;border:1px solid #d9d8d2;border-radius:6px;box-shadow:0 12px 32px -18px rgba(0,0,0,.35);padding:5% 5% 4%;display:flex;flex-direction:column;color:#0b0b0b}
+.slide p{font:650 clamp(12px,1.3vw,16px)/1.2 var(--sans);margin-bottom:3%}
+.slide svg{flex:1;min-height:0;width:100%}
+.slide svg text{fill:#52514e}
+.files{list-style:none;display:grid;gap:10px}
+.files li{display:grid;grid-template-columns:40px 1fr;gap:12px;align-items:center;padding:10px 12px;border:1px solid var(--grid);border-radius:8px;background:var(--g)}
+.files b{display:block;font-size:14px}
+.files span{display:block;font-size:13px;color:var(--i2)}
+.files svg{width:40px;height:46px}
+.js .files li{transform:translateX(12px);transition:transform .4s var(--out)}
+.on .files li{transform:none}
+@media (max-width:759px){.exp{grid-template-columns:1fr;padding:14px}}
+
+footer{border-top:1px solid var(--grid);position:relative;z-index:1}
+.foot{display:flex;align-items:center;gap:16px 28px;flex-wrap:wrap;padding-top:28px;padding-bottom:40px;font-size:13px;color:var(--i2)}
+.foot p:last-child{margin-left:auto}
+@media (max-width:759px){.foot p:last-child{margin-left:0}}
+
+/* entrance: one orchestrated rise, then the matrix plays */
+@media (prefers-reduced-motion:no-preference){
+  .entering .lockup > *{opacity:0;transform:translateY(10px);filter:blur(4px);animation:rise .42s var(--expo) forwards}
+  .entering .lockup > :nth-child(1){animation-delay:.08s}
+  .entering .lockup > :nth-child(2){animation-delay:.18s}
+  .entering .lockup > :nth-child(3){animation-delay:.28s}
+  .entering .lockup > :nth-child(4){animation-delay:.36s}
+  .entering .win{opacity:0;transform:translateY(14px);animation:rise .6s var(--expo) .12s forwards}
+  @keyframes rise{to{opacity:1;transform:none;filter:none}}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{transition:none!important;animation:none!important}
+  .js .collect .row.it,.js .collect .row.gr,.js .board .card,.js .files li{opacity:1;transform:none}
+  .toast{opacity:1;transform:translate(-50%,0)}
+}
+</style>
+</head>
+<body>
+<div class="bggrid" aria-hidden="true"></div>
+
+<header class="top">
+  <div class="wrap">
+    <a class="btn small" href="index.html" aria-label="Back to Rayane's bench" data-copy-aria="matrixPage.back">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3.5 L5.5 8 L10 12.5"/></svg><span data-copy="site.bench">Bench</span></a>
+    <nav aria-label="Sections">
+      <a href="#collect" data-copy="matrixPage.nav.collect">Collect</a><a href="#score" data-copy="matrixPage.nav.score">Score</a><a href="#matrix" data-copy="matrixPage.nav.matrix">Matrix</a><a href="#shortlist" data-copy="matrixPage.nav.shortlist">Shortlist</a><a href="#roadmap" data-copy="matrixPage.nav.roadmap">Roadmap</a><a href="#export" data-copy="matrixPage.nav.export">Export</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+<section class="hero" id="top">
+  <div class="wrap">
+    <div class="lockup">
+      <h1><svg class="mk" viewBox="0 0 32 32" aria-hidden="true"><rect x="2" y="2" width="28" height="28" rx="4" fill="none" stroke="var(--mute)" stroke-width="1.6"/><path d="M16 2v28M2 16h28" stroke="var(--axis)" stroke-width="1.3"/><circle cx="23" cy="9" r="3.4" fill="#EB6834"/><circle cx="23" cy="9" r="6.2" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="9" cy="22.5" r="3" fill="#2A78D6"/></svg><span data-copy="matrixPage.title">Prioritisation matrix</span></h1>
+      <ul class="three">
+        <li><svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="2.5" y="2.5" width="17" height="17" rx="2.5"/><path d="M11 2.5v17M2.5 11h17"/><circle cx="15.5" cy="6.5" r="1.6" fill="currentColor"/></svg><span data-copy="matrixPage.what"></span></li>
+        <li><svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><rect x="2.5" y="3" width="17" height="11" rx="1.5"/><path d="M11 14v3M7 19h8"/></svg><span data-copy="matrixPage.who"></span></li>
+        <li><svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h9M3 11h6M3 16h9"/><path d="M14 12l4-4M18 8v3.4M18 8h-3.4"/></svg><span data-copy="matrixPage.how"></span></li>
+      </ul>
+      <ul class="facts">
+        <li><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><circle cx="8" cy="8" r="6"/><path d="M2 8h12M8 2c2 2 2 10 0 12M8 2c-2 2-2 10 0 12"/></svg><span data-copy="matrixPage.facts.0"></span></li>
+        <li><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" aria-hidden="true"><path d="M3 1.8h6.5L13 5.3V14.2H3z"/><path d="M9.5 1.8v3.5H13"/></svg><span data-copy="matrixPage.facts.1">Excel in, PowerPoint out</span></li>
+        <li><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" aria-hidden="true"><path d="M2 6V2h4M14 6V2h-4M2 10v4h4M14 10v4h-4"/></svg><span data-copy="matrixPage.facts.2"></span></li>
+      </ul>
+      <p class="golive"><a class="btn primary" href="https://rayoen0.github.io/prioritization-matrix/" rel="noopener"><span data-copy="matrixPage.live">Open the live tool</span><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h7v7M13 3L4 12"/></svg></a></p>
+    </div>
+    <div class="win" id="hwin">
+      <div class="win-bar">
+        <span class="sp"></span>
+        <span class="seg" role="group"><button type="button" aria-pressed="true" data-view="matrix" data-copy="matrixPage.app.matrix">Matrix</button><button type="button" aria-pressed="false" data-view="roadmap" data-copy="matrixPage.app.roadmap">Roadmap</button></span>
+        <button class="btn small rp" type="button" id="hreplay" aria-label="Replay" data-copy-aria="matrixPage.app.replay"><svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8a4.5 4.5 0 1 0 1.3-3.2M3.5 2.5v2.6h2.6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      </div>
+      <div class="stage">
+        <svg class="mx" id="hmx" viewBox="0 0 720 440" role="img" aria-label="" data-copy-aria="matrixPage.app.stageLabel"></svg>
+        <div class="board" id="hboard" hidden></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="step" id="collect" aria-labelledby="h-collect">
+  <div class="wrap">
+    <div class="sec-h"><span class="n">1</span><h2 id="h-collect" data-copy="matrixPage.collect.title"></h2><p class="lede" data-copy="matrixPage.collect.lede"></p></div>
+    <div class="frame" role="group" aria-label="" data-copy-aria="matrixPage.collect.label">
+      <div class="collect">
+        <div><p class="plabel" data-copy="matrixPage.collect.pasteLabel"></p><div class="paste" id="paste"></div></div>
+        <svg class="flow" width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 14h17M16 8l6 6-6 6"/></svg>
+        <div><p class="plabel" data-copy="matrixPage.collect.sheetLabel"></p><div class="sheet" id="sheet"></div></div>
+      </div>
+      <div style="height:56px"></div>
+      <p class="toast" data-copy="matrixPage.collect.toast"></p>
+    </div>
+  </div>
+</section>
+
+<section class="step" id="score" aria-labelledby="h-score">
+  <div class="wrap">
+    <div class="sec-h"><span class="n">2</span><h2 id="h-score" data-copy="matrixPage.score.title"></h2><p class="lede" data-copy="matrixPage.score.lede"></p>
+      <p class="hint"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 1.5v13M1.5 8h13M8 1.5L6 3.5M8 1.5l2 2M8 14.5l-2-2M8 14.5l2-2M1.5 8l2-2M1.5 8l2 2M14.5 8l-2-2M14.5 8l-2 2"/></svg><span data-copy="matrixPage.score.hint"></span></p>
+      <p class="readout" id="sreadout" aria-live="polite"></p>
+    </div>
+    <div class="frame"><svg class="mx" id="smx" viewBox="0 0 720 440" role="group" aria-label="" data-copy-aria="matrixPage.score.label"></svg></div>
+  </div>
+</section>
+
+<section class="step" id="matrix" aria-labelledby="h-matrix">
+  <div class="wrap">
+    <div class="sec-h"><span class="n">3</span><h2 id="h-matrix" data-copy="matrixPage.matrix.title"></h2><p class="lede" data-copy="matrixPage.matrix.lede"></p>
+      <p class="hint"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" aria-hidden="true"><circle cx="4" cy="12" r="2"/><circle cx="12" cy="4" r="2"/><path d="M5.5 10.5l5-5"/></svg><span data-copy="matrixPage.matrix.hint"></span></p>
+      <p class="readout" id="mreadout" aria-live="polite"></p>
+    </div>
+    <div class="frame"><svg class="mx" id="mmx" viewBox="0 0 720 360" role="group" aria-label="" data-copy-aria="matrixPage.matrix.label"></svg></div>
+  </div>
+</section>
+
+<section class="step" id="shortlist" aria-labelledby="h-short">
+  <div class="wrap">
+    <div class="sec-h"><span class="n">4</span><h2 id="h-short" data-copy="matrixPage.shortlist.title"></h2><p class="lede" data-copy="matrixPage.shortlist.lede"></p>
+      <div class="tools"><button class="btn small" type="button" id="focusbtn" aria-pressed="false" data-copy="matrixPage.shortlist.focus"></button><span class="count" id="scount" aria-live="polite"></span></div>
+      <p class="hint"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><circle cx="8" cy="8" r="2.6" fill="currentColor"/><circle cx="8" cy="8" r="5.6"/></svg><span data-copy="matrixPage.shortlist.hint"></span></p>
+    </div>
+    <div class="frame"><svg class="mx" id="lmx" viewBox="0 0 720 360" role="group" aria-label="" data-copy-aria="matrixPage.shortlist.label"></svg></div>
+  </div>
+</section>
+
+<section class="step" id="roadmap" aria-labelledby="h-road">
+  <div class="wrap">
+    <div class="sec-h"><span class="n">5</span><h2 id="h-road" data-copy="matrixPage.roadmap.title"></h2><p class="lede" data-copy="matrixPage.roadmap.lede"></p></div>
+    <div class="frame" role="group" aria-label="" data-copy-aria="matrixPage.roadmap.label" style="padding:16px">
+      <div class="board" id="rboard"></div>
+      <p class="legend"><svg width="34" height="10" viewBox="0 0 34 10" aria-hidden="true"><path d="M1 5h28" stroke="var(--bad)" stroke-width="1.6" stroke-dasharray="5 4"/><path d="M27 1.5l5 3.5-5 3.5z" fill="var(--bad)"/></svg><span data-copy="matrixPage.roadmap.legend"></span></p>
+    </div>
+  </div>
+</section>
+
+<section class="step" id="export" aria-labelledby="h-exp">
+  <div class="wrap">
+    <div class="sec-h"><span class="n">6</span><h2 id="h-exp" data-copy="matrixPage.export.title"></h2><p class="lede" data-copy="matrixPage.export.lede"></p></div>
+    <div class="frame" role="group" aria-label="" data-copy-aria="matrixPage.export.label">
+      <div class="exp">
+        <div class="slide"><p data-copy="matrixPage.export.slideTitle"></p><svg class="mx" id="xmx" viewBox="0 0 720 360" aria-hidden="true"></svg></div>
+        <ul class="files" id="files"></ul>
+      </div>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <a class="btn small" href="index.html"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3.5 L5.5 8 L10 12.5"/></svg><span data-copy="site.benchBack">Back to the bench</span></a>
+    <p data-copy="matrixPage.invented">Every idea, score and roadmap item on this page is invented.</p>
+    <p data-copy="matrixPage.footer">Designed and built by Rayane El Metni.</p>
+  </div>
+</footer>
+
+<script>
+(function(){
+var C = window.COPY || {}, P = C.matrixPage;
+function cget(path){ return path.split('.').reduce(function(o, k){ return o == null ? o : o[k]; }, C); }
+function $(id){ return document.getElementById(id); }
+function $$(s, r){ return Array.prototype.slice.call((r || document).querySelectorAll(s)); }
+function fmt(s, o){ return s.replace(/\{(\w+)\}/g, function(m, k){ return o[k]; }); }
+function esc(s){ return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
+$$('[data-copy]').forEach(function(el){ var v = cget(el.dataset.copy); if (typeof v === 'string') el.textContent = v; });
+$$('[data-copy-aria]').forEach(function(el){ var v = cget(el.dataset.copyAria); if (typeof v === 'string') el.setAttribute('aria-label', v); });
+document.title = P.title;
+var RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* The ideas (invented): group, feasibility, value, size, shortlisted */
+var IDEAS = [
+  [0, 8.4, 7.2, 2, 1], [0, 6.8, 3.8, 1, 0], [0, 3.0, 6.8, 2, 1], [1, 2.2, 8.2, 3, 1], [1, 5.6, 6.2, 2, 1], [1, 0.8, 6.4, 3, 0],
+  [1, 1.6, 1.6, 1, 0], [2, 9.2, 5.2, 1, 1], [2, 7.6, 2.4, 2, 1], [2, 4.0, 5.4, 2, 0], [2, 3.4, 2.8, 1, 0], [2, 6.6, 9.2, 2, 1]
+].map(function(a, k){ return { k:k, name:P.ideas[k], g:a[0], x:a[1], y:a[2], size:a[3], short:!!a[4] }; });
+var LINKS = [[3, 4], [3, 5], [0, 7], [2, 9]];
+var R = [0, 6, 8.5, 11.5];
+function quad(x, y){ return y >= 5 ? (x >= 5 ? 'tr' : 'tl') : (x >= 5 ? 'br' : 'bl'); }
+
+/* One drawing of the tool's matrix, used by every scene */
+function Matrix(svg, o){
+  var W = 720, H = +svg.getAttribute('viewBox').split(' ')[3];
+  if (!o.fixed && matchMedia('(max-width:559px)').matches){ H += 200; svg.setAttribute('viewBox', '0 0 720 ' + H); }
+  var X0 = 74, X1 = 704, Y0 = 14, Y1 = o.tray ? H - 118 : H - 44, TY = H - 40;
+  var id = svg.id, h = '';
+  h += '<defs><marker id="' + id + 'ah" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto"><path d="M0 1L9 5L0 9z" fill="context-stroke"/></marker></defs>';
+  var mx = (X0 + X1) / 2, my = (Y0 + Y1) / 2;
+  h += '<rect x="' + X0 + '" y="' + Y0 + '" width="' + (X1 - X0) + '" height="' + (Y1 - Y0) + '" fill="none" stroke="var(--axis)"/>';
+  h += '<g stroke="var(--grid)">';
+  [.25, .75].forEach(function(f){ var x = X0 + f * (X1 - X0), y = Y0 + f * (Y1 - Y0); h += '<line x1="' + x + '" x2="' + x + '" y1="' + Y0 + '" y2="' + Y1 + '"/><line x1="' + X0 + '" x2="' + X1 + '" y1="' + y + '" y2="' + y + '"/>'; });
+  h += '</g><line x1="' + mx + '" x2="' + mx + '" y1="' + Y0 + '" y2="' + Y1 + '" stroke="var(--axis)"/><line x1="' + X0 + '" x2="' + X1 + '" y1="' + my + '" y2="' + my + '" stroke="var(--axis)"/>';
+  var Q = P.quadrants;
+  h += '<text class="q tx" data-fs="12" x="' + (X0 + 10) + '" y="' + (Y0 + 18) + '">' + esc(Q.tl) + '</text>';
+  h += '<text class="q tx" data-fs="12" x="' + (X1 - 10) + '" y="' + (Y0 + 18) + '" text-anchor="end">' + esc(Q.tr) + '</text>';
+  h += '<text class="q tx" data-fs="12" x="' + (X0 + 10) + '" y="' + (Y1 - 10) + '">' + esc(Q.bl) + '</text>';
+  h += '<text class="q tx" data-fs="12" x="' + (X1 - 10) + '" y="' + (Y1 - 10) + '" text-anchor="end">' + esc(Q.br) + '</text>';
+  h += '<text class="tx" data-fs="12" x="' + mx + '" y="' + (Y1 + 26) + '" text-anchor="middle" font-weight="600">' + esc(P.axes.x) + ' →</text>';
+  h += '<text class="tx" data-fs="11" x="' + X0 + '" y="' + (Y1 + 26) + '">' + esc(P.axes.low) + '</text><text class="tx" data-fs="11" x="' + X1 + '" y="' + (Y1 + 26) + '" text-anchor="end">' + esc(P.axes.high) + '</text>';
+  h += '<text class="tx" data-fs="12" font-weight="600" transform="translate(' + (X0 - 24) + ' ' + my + ') rotate(-90)" text-anchor="middle">' + esc(P.axes.y) + ' →</text>';
+  h += '<text class="tx" data-fs="11" x="' + (X0 - 10) + '" y="' + (Y0 + 10) + '" text-anchor="end">' + esc(P.axes.high) + '</text><text class="tx" data-fs="11" x="' + (X0 - 10) + '" y="' + Y1 + '" text-anchor="end">' + esc(P.axes.low) + '</text>';
+  if (o.tray){
+    h += '<rect x="' + X0 + '" y="' + (TY - 30) + '" width="' + (X1 - X0) + '" height="60" rx="8" fill="none" stroke="var(--axis)" stroke-dasharray="4 4"/>';
+    h += '<text class="tx q" data-fs="12" x="' + (X0 + 12) + '" y="' + (TY + 4) + '">' + esc(P.tray) + '</text>';
+  }
+  h += '<g class="links">';
+  (o.links ? LINKS : []).forEach(function(l, j){ h += '<path class="lnk" id="' + id + 'l' + j + '" marker-end="url(#' + id + 'ah)" pathLength="100" stroke-dasharray="100" stroke-dashoffset="100"/>'; });
+  h += '</g>';
+  IDEAS.forEach(function(d){
+    var lf = d.x > 6.4;
+    h += '<g class="dot" id="' + id + 'd' + d.k + '" data-k="' + d.k + '"><circle class="ring" r="' + (R[d.size] + 6) + '"/><circle class="b" r="' + R[d.size] + '"/>' +
+      '<text class="lbl tx" data-fs="12.5" x="' + (lf ? -(R[d.size] + 9) : R[d.size] + 9) + '" y="4.5" text-anchor="' + (lf ? 'end' : 'start') + '">' + esc(d.name) + '</text></g>';
+  });
+  svg.innerHTML = h;
+  var M = { svg:svg, X0:X0, X1:X1, Y0:Y0, Y1:Y1, TY:TY, state:{} };
+  M.g = function(k){ return $(id + 'd' + k); };
+  M.pos = function(x, y){ return [X0 + x / 10 * (X1 - X0), Y1 - y / 10 * (Y1 - Y0)]; };
+  M.val = function(px, py){ return [Math.max(0, Math.min(10, (px - X0) / (X1 - X0) * 10)), Math.max(0, Math.min(10, (Y1 - py) / (Y1 - Y0) * 10))]; };
+  M.trayPos = function(i){ return o.trayLabels ? [X0 + 196 + i * 150, TY] : [X0 + 206 + i * 72, TY]; };
+  M.at = function(k, p, still){
+    var g = M.g(k); if (still) g.style.transition = 'none';
+    g.style.transform = 'translate(' + p[0].toFixed(1) + 'px,' + p[1].toFixed(1) + 'px)';
+    if (still){ void g.getBoundingClientRect(); g.style.transition = ''; }
+  };
+  M.place = function(k, still){
+    var d = IDEAS[k], g = M.g(k), s = M.state[k] || (M.state[k] = { x:d.x, y:d.y });
+    s.scored = true; M.at(k, M.pos(s.x, s.y), still);
+    var b = g.querySelector('.b'); b.style.fill = 'var(--c' + d.g + ')'; b.style.stroke = 'none'; b.style.strokeDasharray = '';
+    g.querySelector('.lbl').style.display = ''; g.classList.remove('tray');
+  };
+  M.tray = function(k, i, still){
+    var g = M.g(k), s = M.state[k] || (M.state[k] = { x:IDEAS[k].x, y:IDEAS[k].y });
+    s.scored = false; M.at(k, M.trayPos(i), still);
+    var b = g.querySelector('.b'); b.style.fill = 'transparent'; b.style.stroke = 'var(--mute)'; b.style.strokeWidth = '1.5'; b.style.strokeDasharray = '3 3';
+    g.querySelector('.lbl').style.display = 'none'; g.classList.add('tray'); g.classList.remove('short');
+  };
+  M.short = function(k, on){ M.g(k).classList.toggle('short', !!on); };
+  M.drawLinks = function(show, still){
+    LINKS.forEach(function(l, j){
+      var p = $(id + 'l' + j); if (!p) return;
+      var a = M.state[l[0]], b = M.state[l[1]];
+      if (!a || !b || a.x == null || b.x == null){ return; }
+      var A = M.pos(a.x, a.y), B = M.pos(b.x, b.y), dx = B[0] - A[0], dy = B[1] - A[1], L = Math.sqrt(dx * dx + dy * dy) || 1;
+      var ra = R[IDEAS[l[0]].size] + 3, rb = R[IDEAS[l[1]].size] + 5;
+      p.setAttribute('d', 'M' + (A[0] + dx / L * ra).toFixed(1) + ' ' + (A[1] + dy / L * ra).toFixed(1) + 'L' + (B[0] - dx / L * rb).toFixed(1) + ' ' + (B[1] - dy / L * rb).toFixed(1));
+      if (still) p.style.transition = 'none';
+      p.style.strokeDashoffset = show ? 0 : 100;
+      if (still){ void p.getBoundingClientRect(); p.style.transition = ''; }
+    });
+  };
+  /* labels stay readable at every width: font size follows the drawing's scale; narrow drawings name the shortlist only */
+  M.fit = function(){
+    var w = svg.getBoundingClientRect().width || 720, k = 720 / w, narrow = w < 560;
+    $$('.tx', svg).forEach(function(t){ var fs = +t.dataset.fs * Math.min(k, 2.1); if (narrow) fs = Math.max(fs, +t.dataset.fs * Math.min(k, 1.9)); t.style.fontSize = fs.toFixed(1) + 'px'; });
+    svg.classList.toggle('narrow', narrow);
+    IDEAS.forEach(function(d){ var l = M.g(d.k).querySelector('.lbl'); if (!l) return; var g = M.g(d.k); var tr = g.classList.contains('tray');
+      if (tr && o.trayLabels && !narrow){ l.style.display = ''; l.setAttribute('x', R[d.size] + 8); l.setAttribute('text-anchor', 'start'); return; }
+      if (!tr && o.trayLabels){ var lf = d.x > 6.4; l.setAttribute('x', lf ? -(R[d.size] + 9) : R[d.size] + 9); l.setAttribute('text-anchor', lf ? 'end' : 'start'); }
+      l.style.display = (tr || ((narrow || o.shortLabels) && !g.classList.contains('short'))) ? 'none' : ''; });
+  };
+  addEventListener('resize', M.fit);
+  return M;
+}
+
+/* ---------- hero: ideas drop from the tray onto the grid, the shortlist is ringed, arrows say what comes first ---------- */
+var H = Matrix($('hmx'), { tray:true, links:true, shortLabels:true }), htimers = [];
+function heroStill(){ IDEAS.forEach(function(d){ H.place(d.k, true); H.short(d.k, d.short); }); H.drawLinks(true, true); H.fit(); }
+function heroRun(){
+  htimers.forEach(clearTimeout); htimers = [];
+  var order = [0, 3, 7, 11, 4, 2, 9, 1, 8, 5, 10, 6];
+  order.forEach(function(k, i){ H.tray(k, Math.min(i, 5), true); H.g(k).style.opacity = i < 6 ? '' : '0'; });
+  H.drawLinks(false, true); H.fit();
+  order.forEach(function(k, i){
+    htimers.push(setTimeout(function(){
+      H.place(k); H.g(k).style.opacity = '';
+      var waiting = order.slice(i + 1, i + 7); waiting.forEach(function(w, j){ H.tray(w, j); H.g(w).style.opacity = ''; });
+      H.fit();
+    }, 450 + i * 260));
+  });
+  var t = 450 + order.length * 260 + 250;
+  IDEAS.filter(function(d){ return d.short; }).forEach(function(d, i){ htimers.push(setTimeout(function(){ H.short(d.k, true); H.fit(); }, t + i * 140)); });
+  htimers.push(setTimeout(function(){ H.drawLinks(true); }, t + 900));
+}
+if (RM) heroStill(); else heroRun();
+$('hreplay').addEventListener('click', function(){ showView('matrix'); if (RM) heroStill(); else heroRun(); });
+
+/* the window's Matrix / Roadmap switch works, as in the tool */
+function showView(v){
+  $$('#hwin .seg button').forEach(function(b){ b.setAttribute('aria-pressed', String(b.dataset.view === v)); });
+  $('hmx').hidden = v !== 'matrix'; $('hboard').hidden = v !== 'roadmap';
+  if (v === 'roadmap'){ var b = $('hboard'); b.classList.remove('on'); buildBoard(b); void b.offsetWidth; b.classList.add('on'); conflict(b); }
+  else H.fit();
+}
+$$('#hwin .seg button').forEach(function(b){ b.addEventListener('click', function(){ showView(b.dataset.view); }); });
+
+/* ---------- 1 collect: the pasted list becomes the sheet ---------- */
+$('paste').innerHTML = P.collect.paste.map(function(l){ return '<span class="ln' + (/:$/.test(l) ? ' h' : '') + '">' + esc(l) + '</span>'; }).join('');
+(function(){
+  var h = '<div class="row hd"><span>' + esc(P.collect.cols[0]) + '</span><span class="num">' + esc(P.collect.cols[1]) + '</span><span class="num">' + esc(P.collect.cols[2]) + '</span></div>', n = 0;
+  P.groups.forEach(function(gname, g){
+    var items = IDEAS.filter(function(d){ return d.g === g; }).slice(0, 3);
+    h += '<div class="row gr" style="transition-delay:' + (n++ * 70) + 'ms"><span><i style="background:var(--c' + g + ')"></i>' + esc(gname) + '</span><span></span><span></span></div>';
+    items.forEach(function(d, j){
+      var scored = !(g === 2 && j === 2);
+      h += '<div class="row it" style="transition-delay:' + (n++ * 70) + 'ms"><span>' + esc(d.name) + '</span>' + (scored ? '<span class="num">' + d.y.toFixed(1) + '</span><span class="num">' + d.x.toFixed(1) + '</span>' : '<span class="num u"></span><span class="num u">' + esc(P.collect.unscored) + '</span>') + '</div>';
+    });
+  });
+  $('sheet').innerHTML = h;
+})();
+
+/* ---------- 2 score: drag from the tray onto the grid ---------- */
+var S = Matrix($('smx'), { tray:true, links:false, trayLabels:true });
+var STRAY = [9, 1, 10];
+function scoreReset(){
+  IDEAS.forEach(function(d){ if (STRAY.indexOf(d.k) < 0) S.place(d.k, true); });
+  STRAY.forEach(function(k, i){ S.tray(k, i, true); }); S.fit();
+}
+scoreReset();
+function sayScore(k){
+  var s = S.state[k]; $('sreadout').textContent = fmt(P.score.readout, { name:IDEAS[k].name, v:s.y.toFixed(1), f:s.x.toFixed(1), q:P.quadrants[quad(s.x, s.y)] });
+}
+function scoreAt(k, x, y){ S.state[k] = { x:x, y:y, scored:true }; S.place(k); S.fit(); sayScore(k); }
+(function(){
+  var svg = $('smx'), drag = null;
+  function pt(e){ var p = svg.createSVGPoint(); p.x = e.clientX; p.y = e.clientY; return p.matrixTransform(svg.getScreenCTM().inverse()); }
+  STRAY.forEach(function(k){
+    var g = S.g(k); g.classList.add('grab'); g.setAttribute('tabindex', '0'); g.setAttribute('role', 'button'); g.setAttribute('aria-label', IDEAS[k].name);
+    g.addEventListener('pointerdown', function(e){ e.preventDefault(); drag = k; svg.setPointerCapture(e.pointerId); g.style.transition = 'none'; });
+    g.addEventListener('keydown', function(e){
+      var st = S.state[k], step = e.shiftKey ? 1 : .5, map = { ArrowLeft:[-step, 0], ArrowRight:[step, 0], ArrowUp:[0, step], ArrowDown:[0, -step] }, m = map[e.key];
+      if (!m) return; e.preventDefault();
+      var x = st.scored ? st.x : 5, y = st.scored ? st.y : 5;
+      if (st.scored){ x = Math.max(0, Math.min(10, x + m[0])); y = Math.max(0, Math.min(10, y + m[1])); }
+      scoreAt(k, x, y);
+    });
+  });
+  svg.addEventListener('pointermove', function(e){ if (drag == null) return; var p = pt(e); S.g(drag).style.transform = 'translate(' + p.x.toFixed(1) + 'px,' + p.y.toFixed(1) + 'px)'; });
+  function up(e){
+    if (drag == null) return; var k = drag, g = S.g(k), p = pt(e); drag = null; g.style.transition = '';
+    if (p.x >= S.X0 && p.x <= S.X1 && p.y >= S.Y0 && p.y <= S.Y1){ var v = S.val(p.x, p.y); scoreAt(k, Math.round(v[0] * 10) / 10, Math.round(v[1] * 10) / 10); }
+    else if (S.state[k].scored) S.place(k); else S.tray(k, STRAY.indexOf(k));
+  }
+  svg.addEventListener('pointerup', up); svg.addEventListener('pointercancel', up);
+})();
+
+/* ---------- 3 matrix: trace a chain ---------- */
+var MM = Matrix($('mmx'), { links:true, allLabels:false });
+IDEAS.forEach(function(d){ MM.place(d.k, true); });
+MM.drawLinks(true, true); MM.fit();
+function chain(k){
+  var seen = {}; seen[k] = 1; var grow = true;
+  while (grow){ grow = false; LINKS.forEach(function(l){ if (seen[l[0]] && !seen[l[1]]){ seen[l[1]] = 1; grow = true; } if (seen[l[1]] && !seen[l[0]]){ seen[l[0]] = 1; grow = true; } }); }
+  return seen;
+}
+function trace(k){
+  var svg = $('mmx');
+  $$('.lit', svg).forEach(function(e){ e.classList.remove('lit'); });
+  if (k == null){ svg.classList.remove('tracing'); $('mreadout').textContent = ''; MM.fit(); return; }
+  var c = chain(k), n = 0;
+  IDEAS.forEach(function(d){ if (c[d.k]){ MM.g(d.k).classList.add('lit'); if (d.k !== k) n++; } });
+  LINKS.forEach(function(l, j){ if (c[l[0]] && c[l[1]]) $('mmxl' + j).classList.add('lit'); });
+  svg.classList.add('tracing');
+  /* traced dots show their names, even on a phone */
+  IDEAS.forEach(function(d){ var l = MM.g(d.k).querySelector('.lbl'); if (c[d.k]) l.style.display = ''; });
+  $('mreadout').textContent = n ? fmt(P.matrix.traced, { name:IDEAS[k].name, n:IDEAS.filter(function(d){ return c[d.k] && d.k !== k; }).map(function(d){ return d.name; }).join(', ') }) : fmt(P.matrix.none, { name:IDEAS[k].name });
+}
+IDEAS.forEach(function(d){
+  var g = MM.g(d.k); g.classList.add('pick'); g.setAttribute('tabindex', '0'); g.setAttribute('role', 'button'); g.setAttribute('aria-label', d.name);
+  g.addEventListener('click', function(e){ e.stopPropagation(); trace(d.k); });
+  g.addEventListener('keydown', function(e){ if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); trace(d.k); } if (e.key === 'Escape') trace(null); });
+});
+$('mmx').addEventListener('click', function(){ trace(null); });
+
+/* ---------- 4 shortlist: double-click rings, Focus fades the rest ---------- */
+var L = Matrix($('lmx'), { links:false });
+var SH = {};
+IDEAS.forEach(function(d){ L.place(d.k, true); SH[d.k] = d.short; });
+function shortCount(){ var n = 0; for (var k in SH) if (SH[k]) n++; $('scount').textContent = fmt(P.shortlist.count, { n:n }); }
+function applyShort(){ IDEAS.forEach(function(d){ L.short(d.k, SH[d.k]); }); shortCount(); L.fit(); }
+IDEAS.forEach(function(d){
+  var g = L.g(d.k); g.classList.add('pick'); g.setAttribute('tabindex', '0'); g.setAttribute('role', 'button'); g.setAttribute('aria-label', d.name);
+  g.addEventListener('dblclick', function(){ SH[d.k] = !SH[d.k]; applyShort(); });
+  g.addEventListener('click', function(){ if (matchMedia('(pointer:coarse)').matches){ SH[d.k] = !SH[d.k]; applyShort(); } });
+  g.addEventListener('keydown', function(e){ if (e.key === 'Enter'){ e.preventDefault(); SH[d.k] = !SH[d.k]; applyShort(); } });
+});
+$('focusbtn').addEventListener('click', function(){ var on = this.getAttribute('aria-pressed') !== 'true'; this.setAttribute('aria-pressed', String(on)); $('lmx').classList.toggle('focus', on); });
+shortCount(); L.fit();
+
+/* ---------- 5 roadmap: lanes per group, Now / Next / Later, a conflict in red ---------- */
+var SEED = { tr:0, tl:1, br:2 };
+function buildBoard(el){
+  var h = '<div class="bd"><span></span>' + P.phases.map(function(p){ return '<span class="ph">' + esc(p) + '</span>'; }).join(''), n = 0;
+  P.groups.forEach(function(gname, g){
+    h += '<span class="ln" style="background:var(--t' + g + ')"><i style="background:var(--c' + g + ')"></i>' + esc(gname) + '</span>';
+    [0, 1, 2].forEach(function(ph){
+      h += '<div class="cell c' + ph + (ph === 2 ? ' last' : '') + '" style="background:var(--t' + g + ')">';
+      IDEAS.forEach(function(d){
+        if (d.g !== g || !d.short || SEED[quad(d.x, d.y)] !== ph) return;
+        var warn = d.k === 4 ? '<svg class="warn" viewBox="0 0 18 18" aria-hidden="true"><path d="M9 1.5l7.5 14h-15z" fill="currentColor"/><path d="M9 6.5v4.2M9 12.6v.6" stroke="#fff" stroke-width="1.7" stroke-linecap="round"/></svg>' : '';
+        h += '<span class="card" data-k="' + d.k + '" style="color:var(--c' + g + ');transition-delay:' + (200 + n++ * 120) + 'ms"><span>' + esc(d.name) + '</span>' + warn + '</span>';
+      });
+      h += '</div>';
+    });
+  });
+  el.innerHTML = h + '</div><svg class="over" aria-hidden="true"></svg>';
+  var w = el.querySelector('.warn'); if (w) w.parentNode.setAttribute('title', P.roadmap.conflict);
+}
+function conflict(el){
+  var a = el.querySelector('.card[data-k="3"]'), b = el.querySelector('.card[data-k="4"]'), svg = el.querySelector('svg.over');
+  if (!a || !b || !svg) return;
+  var r0 = el.getBoundingClientRect(), ra = a.getBoundingClientRect(), rb = b.getBoundingClientRect();
+  var x1 = ra.left - r0.left, y1 = ra.top - r0.top + ra.height / 2, x2 = rb.right - r0.left + 2, y2 = rb.top - r0.top + rb.height / 2;
+  svg.innerHTML = '<path d="M' + x1.toFixed(1) + ' ' + y1.toFixed(1) + 'C' + (x1 - 30).toFixed(1) + ' ' + y1.toFixed(1) + ' ' + (x2 + 30).toFixed(1) + ' ' + y2.toFixed(1) + ' ' + (x2 + 6).toFixed(1) + ' ' + y2.toFixed(1) + '"/>' +
+    '<path d="M' + (x2 + 8).toFixed(1) + ' ' + (y2 - 4.5).toFixed(1) + 'l-7 4.5 7 4.5z" fill="var(--bad)" stroke="none" style="stroke-dasharray:none"/>';
+}
+buildBoard($('rboard'));
+addEventListener('resize', function(){ conflict($('rboard')); if (!$('hboard').hidden) conflict($('hboard')); });
+conflict($('rboard'));
+
+/* ---------- 6 export: the slide and the files ---------- */
+var X = Matrix($('xmx'), { links:true, fixed:true });
+IDEAS.forEach(function(d){ X.place(d.k, true); X.short(d.k, d.short); }); X.drawLinks(true, true);
+$$('.tx', $('xmx')).forEach(function(t){ t.style.fontSize = (+t.dataset.fs * 1.25) + 'px'; });
+IDEAS.forEach(function(d){ if (!d.short){ var l = X.g(d.k).querySelector('.lbl'); l.parentNode.removeChild(l); } });
+$('files').innerHTML = P.export.files.map(function(f, i){
+  return '<li style="transition-delay:' + (120 + i * 110) + 'ms"><svg viewBox="0 0 40 46" aria-hidden="true"><path d="M4 2h22l10 10v32H4z" fill="var(--surf)" stroke="var(--axis)" stroke-width="1.5" stroke-linejoin="round"/><path d="M26 2v10h10" fill="none" stroke="var(--axis)" stroke-width="1.5" stroke-linejoin="round"/><text x="20" y="34" text-anchor="middle" font-size="9.5" font-weight="700" fill="var(--acc)" font-family="system-ui,sans-serif">.' + esc(f.ext) + '</text></svg><span><b>' + esc(f.name) + '</b><span>' + esc(f.line) + '</span></span></li>';
+}).join('');
+
+/* ---------- scenes play when a third of them is in view ---------- */
+var scenes = {
+  collect:function(on){ $('collect').classList.toggle('on', on); },
+  score:function(on){
+    if (!on || RM){ if (RM && on && !S.state[9].scored) scoreAt(9, IDEAS[9].x, IDEAS[9].y); return; }
+    if (!S.state[9].scored) setTimeout(function(){ if (!S.state[9].scored) scoreAt(9, IDEAS[9].x, IDEAS[9].y); }, 600);
+  },
+  matrix:function(on){ if (on && !$('mmx').classList.contains('tracing')) setTimeout(function(){ trace(3); }, RM ? 0 : 700); },
+  shortlist:function(on){
+    if (!on) return;
+    if (RM){ applyShort(); return; }
+    IDEAS.forEach(function(d){ L.short(d.k, false); });
+    IDEAS.filter(function(d){ return SH[d.k]; }).forEach(function(d, i){ setTimeout(function(){ L.short(d.k, true); L.fit(); }, 300 + i * 180); });
+  },
+  roadmap:function(on){ $('roadmap').classList.toggle('on', on); if (on) setTimeout(function(){ conflict($('rboard')); }, 50); },
+  export:function(on){ $('export').classList.toggle('on', on); }
+};
+var played = {};
+if ('IntersectionObserver' in window && !RM){
+  var io = new IntersectionObserver(function(es){
+    es.forEach(function(e){
+      var id = e.target.id;
+      if (e.isIntersecting && !played[id]){ played[id] = 1; scenes[id](true); }
+    });
+  }, { threshold:.33 });
+  Object.keys(scenes).forEach(function(id){ io.observe($(id)); });
+} else Object.keys(scenes).forEach(function(id){ scenes[id](true); });
+})();
+</script>
+</body>
+</html>
