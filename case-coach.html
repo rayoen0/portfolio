@@ -374,7 +374,7 @@ span.play{display:inline-block;border-style:solid;border-width:5px 0 5px 8px;bor
 @media (max-width:759px){.door .door-line{font-size:18px;min-height:0}}
 
 /* ---- drills: one drill type at a time, the ask on the dark, what comes back on paper ---- */
-.picker{padding:0 0 32px} /* no overflow clip: a rounded clip over the animated drill made the compositor paint a bright strip at its left edge */
+.picker{padding:0 0 32px;overflow:hidden}
 .dtabs{display:flex;flex-wrap:wrap;gap:0 4px;padding:8px 24px 0;border-bottom:1px solid var(--line)}
 .dtab{appearance:none;position:relative;display:inline-flex;align-items:center;gap:8px;min-height:48px;padding:0 12px;background:none;border:0;color:var(--mute);font:400 15px/1 var(--sans);cursor:pointer;transition:color .12s}
 .dtab svg{width:18px;height:18px;flex:none}
