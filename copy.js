@@ -9,8 +9,8 @@ window.COPY = {
     
     tagline: "Problem solver in Brussels. Mostly my own problems, so far.",
     taglineIsPlaceholder: true,
-    
-    role: "",
+    /* one plain line under the tagline: what the bench is and how to use it (hidden while empty) */
+    role: "Seven apps I designed and built. Open any of them to see how it works.",
     
     contact: {
       email: "",                          
@@ -33,24 +33,24 @@ window.COPY = {
   /* name, one line, platform, the short line under its object on the bench */
   apps: {
     crux:     { name: "crux", line: "Times each deep-work block on your Mac and pulls you back the moment you drift.", platform: "Mac",
-                bench: "times deep work, catches drift" },
+                bench: "keeps deep work on the Mac on task" },
     coach:    { name: "case coach", line: "Practise case interviews out loud, with a spoken interviewer, exhibits and drills.", platform: "Web, spoken",
-                bench: "case interviews, practised out loud",
+                bench: "case-interview practice, out loud",
                 world: "For consulting candidates: a spoken interviewer runs the case, puts exhibits on the desk, then drills what slipped.", fact: "Web, spoken" },
     moat:     { name: "Moat", line: "Locks the iPhone apps that eat your time; getting back in costs an effort you chose.", platform: "iPhone",
-                bench: "locks the apps that eat your time",
+                bench: "locks the iPhone apps that eat time",
                 world: "Locks the iPhone apps that eat your time, on a schedule, a place or a daily limit. Getting back in costs an effort you chose in advance.", fact: "iPhone" },
     drive:    { name: "Drive", line: "A knowledge check for teams: one quiz, a pass mark on every topic, the score on a speedometer.", platform: "Web",
-                bench: "team knowledge check, 80% to pass",
+                bench: "knowledge check for teams",
                 world: "A knowledge check before a training: one quiz across every topic, 80% to pass each, the result on a speedometer and a certificate.", fact: "Web" },
     glossary: { name: "Literacy glossary", line: "Business-technology terms in plain English, filed by architecture layer.", platform: "Web",
                 bench: "tech terms in plain English",
                 world: "For business people who meet technical terms: each one spelled out, explained in a sentence and filed under its architecture layer.", fact: "Web" },
     matrix:   { name: "Prioritisation matrix", line: "Scores workshop ideas on value and feasibility, then fills the Now, Next, Later roadmap.", platform: "Web",
-                bench: "turns workshop ideas into a roadmap",
+                bench: "ranks workshop ideas into a roadmap",
                 world: "For prioritisation workshops: the room scores each idea on value and feasibility on screen, shortlists the best, and the roadmap fills itself.", fact: "Web, for workshops" },
     stakes:   { name: "stakes", line: "Puts a deadline and a consequence on a task; one ring counts down until it is done.", platform: "Web",
-                bench: "deadlines with a consequence",
+                bench: "deadlines with a real consequence",
                 world: "Name a task, a deadline and what missing it will cost you. The ring counts down and only fills once the work is checked.", fact: "Web" }
   },
 

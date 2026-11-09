@@ -71,7 +71,7 @@ h1 .mk{width:.78em;height:.78em;flex:none}
 .facts .lb{font:600 13px/24px var(--sys);color:var(--i2);text-transform:none}
 .facts .tx{font-size:18px;line-height:1.4}
 .hstage{grid-column:7/13;display:flex;justify-content:center;align-self:end;position:relative}
-.hstage{padding-bottom:22px}
+.hstage{padding-bottom:30px}
 .lake{position:absolute;left:0;right:0;bottom:0;height:128px;z-index:3;pointer-events:none;overflow:hidden}
 .lake svg{position:absolute;left:0;bottom:0;width:200%;height:100%}
 .lake .wv1{fill:var(--water);opacity:.42;animation:wave 9s linear infinite}
@@ -522,7 +522,7 @@ function lake(id, h, a, b){
   }
   $(id).innerHTML = '<path class="wv1" d="' + p1 + "V" + h + 'Z"/><path class="wv2" d="' + p2 + "V" + h + 'Z"/>';
 }
-lake("lake", 128, 52, 84);
+lake("lake", 128, 88, 100);
 lake("lake2", 64, 22, 38);
 function wavy(cx, cy, r, amp, n){ var s = ""; for (var i = 0; i <= 180; i++) { var a = i / 180 * Math.PI * 2, rr = r + amp * Math.sin(n * a); s += (i ? "L" : "M") + r1(cx + rr * Math.cos(a)) + " " + r1(cy + rr * Math.sin(a)); } return s + "Z"; }
 $("crestA").setAttribute("d", wavy(195, 250, 108, 2, 17));
