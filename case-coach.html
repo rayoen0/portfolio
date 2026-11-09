@@ -43,7 +43,7 @@ b,strong{font-weight:600}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .picker.pre .st{opacity:0}
 .ring-pen{stroke-dasharray:100;stroke-dashoffset:0}
-.dpanel.play .ring-pen{animation:penring .5s ease-out 1.8s both}
+.dpanel.run .ring-pen{animation:penring .5s ease-out 1.8s both}
 @keyframes penring{from{stroke-dashoffset:100}to{stroke-dashoffset:0}}
 .wrap{max-width:calc(1224px + 2 * var(--gut));margin:0 auto;padding:0 var(--gut)}
 
@@ -319,7 +319,7 @@ h1 .mk{width:.56em;height:.56em;flex:none}
 .why{font-size:15px;line-height:1.45;color:#3a3f47}
 .slip-hear{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .tstamp{font:400 13px/1 var(--mono);color:var(--pmute)}
-.play{display:inline-block;border-style:solid;border-width:5px 0 5px 8px;border-color:transparent transparent transparent currentColor}
+span.play{display:inline-block;border-style:solid;border-width:5px 0 5px 8px;border-color:transparent transparent transparent currentColor}
 .slip-act{display:flex;gap:12px;flex-wrap:wrap;margin-top:4px}
 .slip-wait{display:flex;flex-direction:column;gap:8px;padding:8px 0}
 .slip-wait i{height:12px;border-radius:4px;background:var(--under);animation:pulse 1.2s ease-in-out infinite}
@@ -374,7 +374,7 @@ h1 .mk{width:.56em;height:.56em;flex:none}
 @media (max-width:759px){.door .door-line{font-size:18px;min-height:0}}
 
 /* ---- drills: one drill type at a time, the ask on the dark, what comes back on paper ---- */
-.picker{padding:0 0 32px;overflow:hidden}
+.picker{padding:0 0 32px} /* no overflow clip: a rounded clip over the animated drill made the compositor paint a bright strip at its left edge */
 .dtabs{display:flex;flex-wrap:wrap;gap:0 4px;padding:8px 24px 0;border-bottom:1px solid var(--line)}
 .dtab{appearance:none;position:relative;display:inline-flex;align-items:center;gap:8px;min-height:48px;padding:0 12px;background:none;border:0;color:var(--mute);font:400 15px/1 var(--sans);cursor:pointer;transition:color .12s}
 .dtab svg{width:18px;height:18px;flex:none}
@@ -395,7 +395,7 @@ h1 .mk{width:.56em;height:.56em;flex:none}
 .dtime{display:flex;align-items:center;gap:12px;font-size:13px;color:var(--dim-ink)}
 .dtime i{flex:1;height:2px;background:var(--line);overflow:hidden;position:relative}
 .dtime i::after{content:"";position:absolute;inset:0;background:var(--dim-ink);transform-origin:left;transform:scaleX(.18)}
-.dpanel.play .dtime i::after{animation:drainto 2s linear both}
+.dpanel.run .dtime i::after{animation:drainto 2s linear both}
 @keyframes drainto{from{transform:scaleX(1)}to{transform:scaleX(.18)}}
 .dyou{display:flex;flex-direction:column;gap:8px;padding-top:16px;border-top:1px solid var(--line)}
 .dlab{font-size:13px;font-weight:600;color:var(--good)}
@@ -428,7 +428,7 @@ h1 .mk{width:.56em;height:.56em;flex:none}
 .mk-g{width:22px;height:22px;border:1.5px solid currentColor;border-radius:50%;display:inline-flex;align-items:center;justify-content:center}
 .mk-g svg{width:12px;height:12px}
 .mk-g path{stroke-dasharray:15;stroke-dashoffset:0}
-.dpanel.play .mk-g path{animation:pen .3s ease-out both;animation-delay:calc(var(--i,0) * 160ms + 1.9s)}
+.dpanel.run .mk-g path{animation:pen .3s ease-out both;animation-delay:calc(var(--i,0) * 160ms + 1.9s)}
 .m-hit .mk-g{color:var(--chart)}
 .m-part .mk-g{color:#8a5a14}
 .m-miss .mk-g{color:#9a4a42}
@@ -461,7 +461,7 @@ h1 .mk{width:.56em;height:.56em;flex:none}
 .probe{font-size:15px;color:#3a3f47}
 .dpanel .droom{border:1px solid var(--line);border-radius:14px;min-height:440px;padding:32px 16px 64px;position:relative;overflow:hidden}
 @media (prefers-reduced-motion:no-preference){
-  .dpanel.play .st{animation:drise .36s var(--expo) both;animation-delay:calc(var(--i,0) * 1ms)}
+  .dpanel.run .st{animation:drise .36s var(--expo) both;animation-delay:calc(var(--i,0) * 1ms)}
   @keyframes drise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 }
 .weak{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:32px;align-items:start;margin-top:24px;padding:24px}
@@ -760,8 +760,9 @@ function selectKind(id, focus){
   var k = KD[id];
   dmeta.innerHTML = '<span>' + ICO(MI.time) + esc(k.time) + '</span><span>' + ICO(MI.level) + esc(k.level) + '</span><span>' + ICO(MI.source) + esc(k.source) + '</span>';
   var p = $("#dp-" + id);
-  clearTimeout(selectKind.t); $$(".dpanel.play", picker).forEach(function(x){ x.classList.remove("play"); });
-  if (!RM && dSeen) { restart(p, "play"); selectKind.t = setTimeout(function(){ p.classList.remove("play"); }, 2800); } /* the end state is the resting panel */
+  clearTimeout(selectKind.t); $$(".dpanel.run", picker).forEach(function(x){ x.classList.remove("run"); });
+  /* "run", not "play": .play is the debrief's play-triangle glyph and drew an 8 px left border on the panel */
+  if (!RM && dSeen) { restart(p, "run"); selectKind.t = setTimeout(function(){ p.classList.remove("run"); }, 2800); }
   if (focus) $("#dt-" + id).focus();
 }
 dtabList.forEach(function(t, i){
